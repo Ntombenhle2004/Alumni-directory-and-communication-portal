@@ -1,26 +1,30 @@
-from flask import Flask
-from dotenv import load_dotenv
-import os
-from .config.db import db
 
-# ✅ ADD THIS LINE
-from .routes.auth_routes import auth
+from flask import Flask
+from .config.db import db, SQLALCHEMY_DATABASE_URI
+from dotenv import load_dotenv
 
 load_dotenv()
 
-def create_app():
 
+from .routes.auth_routes import auth
+
+def create_app():
     app = Flask(__name__)
 
-    # Database config
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+   
+    app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
 
-    # ✅ Register routes AFTER import
-    app.register_blueprint(auth)
+ 
+    app.register_blueprint(auth, url_prefix="/auth")
 
-    from .models.user import User
+  
+    @app.route("/")
+    def home():
+        return "Flask Backend is Running"
+
+    print("App created and blueprint registered")  
 
     return app

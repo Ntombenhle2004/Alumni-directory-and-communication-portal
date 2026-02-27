@@ -1,5 +1,6 @@
 from ..config.db import db
 
+
 class User(db.Model):
 
     __tablename__ = "users"
@@ -8,5 +9,8 @@ class User(db.Model):
     full_name = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
-    role = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime)
+    role = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(
+        db.DateTime,
+        server_default=db.func.now()
+    )

@@ -21,7 +21,6 @@ def get_profile_logic(user_id):
             "created_at": user.created_at.strftime("%Y-%m-%d")
         }
 
-        # Use .lower() to handle any case sensitivity
         role = user.role.lower()
 
         if role == 'student':
@@ -32,7 +31,6 @@ def get_profile_logic(user_id):
                 "interests": p.interests if p else None,
                 "is_subscribed": p.is_subscribed if p else False
             }
-        # Fixed: Checking for both 'alumni' and 'alumn'
         elif role in ['alumni', 'alumn']:
             p = AlumniProfile.query.filter_by(user_id=user.id).first()
             profile_data["details"] = {
@@ -77,7 +75,6 @@ def update_alumni_details(user_id, data):
     try:
         user = User.query.get(user_id)
         
-        # Fixed: Now accepts both spellings of the role
         if not user or user.role.lower() not in ['alumni', 'alumn']:
             return None, f"Unauthorized: User is a {user.role if user else 'None'}, not an alumnus."
 

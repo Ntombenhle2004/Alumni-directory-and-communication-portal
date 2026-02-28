@@ -7,7 +7,7 @@ def send_request_logic(data):
         alumni_id = data.get("alumni_id")
         message = data.get("message", "I would like you to be my mentor.")
 
-        # 1. Check if Alumni exists and is available
+      
         alumni_profile = AlumniProfile.query.filter_by(user_id=alumni_id).first()
         if not alumni_profile:
             return None, "Alumnus profile not found."
@@ -15,7 +15,7 @@ def send_request_logic(data):
         if not alumni_profile.mentorship_available:
             return None, "This mentor is currently not accepting new requests."
 
-        # 2. Prevent duplicate pending requests
+       
         existing = MentorshipRequest.query.filter_by(
             student_id=student_id, 
             alumni_id=alumni_id, 
@@ -24,7 +24,15 @@ def send_request_logic(data):
         if existing:
             return None, "You already have a pending request for this mentor."
 
-        # 3. Create the request
+        existing_accepted = MentorshipRequest.query.filter_by(
+            student_id=student_id, 
+            alumni_id=alumni_id, 
+            status='Accepted'
+        ).first()
+        if existing_accepted:
+            return None, "You already have an accepted request for this mentor."
+
+       
         new_request = MentorshipRequest(
             student_id=student_id, 
             alumni_id=alumni_id,

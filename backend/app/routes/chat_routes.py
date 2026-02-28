@@ -74,3 +74,5 @@ def delete_chat(conv_id):
     if error:
         return jsonify({"error": error}), 400
     return jsonify({"message": "Conversation and all messages cleared"}), 200
+
+

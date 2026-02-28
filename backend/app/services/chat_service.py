@@ -11,7 +11,6 @@ def start_conversation_logic(data):
         if not s_id or not a_id:
             return None, "Missing student_id or alumni_id"
 
-        # Check if conversation already exists (unique constraint)
         conv = Conversation.query.filter_by(student_id=s_id, alumni_id=a_id).first()
         
         if not conv:
@@ -49,8 +48,7 @@ def get_chat_history(conversation_id, viewer_id):
             return None, "Viewer not found"
 
         messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.sent_at.asc()).all()
-        
-        # Check if viewer is a student and if they are subscribed
+
         is_subscribed = False
         if viewer.role.lower() == 'student':
             profile = StudentProfile.query.filter_by(user_id=viewer_id).first()
@@ -66,14 +64,14 @@ def get_chat_history(conversation_id, viewer_id):
                 "sent_at": m.sent_at.strftime("%H:%M")
             }
 
-            # --- THE PAYWALL ---
+
             if m.message_type in ['image', 'document']:
-                # Mentors see everything; Students only see if subscribed
+             
                 if viewer.role.lower() in ['alumni', 'alumn'] or is_subscribed:
                     msg_data["file_url"] = m.file_path
                 else:
                     msg_data["file_url"] = "LOCKED"
-                    msg_data["text"] = "🔒 Upgrade to view attachment"
+                    msg_data["text"] = " Upgrade to view attachment"
 
             output.append(msg_data)
             
@@ -81,7 +79,6 @@ def get_chat_history(conversation_id, viewer_id):
     except Exception as e:
         return None, str(e)
 
-# --- CRUD ADDITIONS (Update/Delete) ---
 
 def update_message_logic(message_id, sender_id, new_text):
     try:

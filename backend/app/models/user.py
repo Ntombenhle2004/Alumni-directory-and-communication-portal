@@ -19,7 +19,6 @@ class StudentProfile(db.Model):
     course = db.Column(db.String(100))
     graduation_year = db.Column(db.Integer)
     interests = db.Column(db.Text)
-    # Adding subscription fields for the "pay to view images" logic later
     is_subscribed = db.Column(db.Boolean, default=False)
     subscription_expiry = db.Column(db.DateTime, nullable=True)
 
@@ -63,3 +62,29 @@ class Message(db.Model):
     file_path = db.Column(db.Text)
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False)
+    
+class AdminLog(db.Model):
+    __tablename__ = 'admin_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
+    action = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    admin = db.relationship('User', backref='admin_actions')
+    
+class SystemSetting(db.Model):
+    __tablename__ = 'system_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False) 
+    value = db.Column(db.String(100), nullable=False)     
+    
+class Subscription(db.Model):
+    __tablename__ = 'subscriptions'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), unique=True)
+    expiry_date = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    last_payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    student = db.relationship('User', backref=db.backref('subscription', uselist=False))  
+    
+    
+             

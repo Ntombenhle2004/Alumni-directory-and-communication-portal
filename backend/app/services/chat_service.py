@@ -46,12 +46,11 @@ def get_chat_history(conversation_id, viewer_id):
         if not viewer:
             return None, "Viewer not found"
 
-        # Force a refresh to make sure we aren't looking at "Old" data in the session
+        
         db.session.expire_all() 
 
         messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.sent_at.asc()).all()
 
-        # Check Subscription Status
         is_subscribed = False
         role = viewer.role.lower()
 

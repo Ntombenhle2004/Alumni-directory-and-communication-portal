@@ -41,18 +41,26 @@ def send_message_logic(data):
         return None, f"Failed to send message: {str(e)}"
 
 def get_chat_history(conversation_id, viewer_id):
-    """Fetches messages and applies the paywall logic for students."""
     try:
         viewer = User.query.get(viewer_id)
         if not viewer:
             return None, "Viewer not found"
 
+        # Force a refresh to make sure we aren't looking at "Old" data in the session
+        db.session.expire_all() 
+
         messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.sent_at.asc()).all()
 
+        # Check Subscription Status
         is_subscribed = False
-        if viewer.role.lower() == 'student':
+        role = viewer.role.lower()
+
+        if role in ['alumni', 'alumn', 'admin']:
+            is_subscribed = True
+        elif role == 'student':
             profile = StudentProfile.query.filter_by(user_id=viewer_id).first()
-            is_subscribed = profile.is_subscribed if profile else False
+            if profile and profile.is_subscribed:
+                is_subscribed = True
 
         output = []
         for m in messages:
@@ -64,21 +72,18 @@ def get_chat_history(conversation_id, viewer_id):
                 "sent_at": m.sent_at.strftime("%H:%M")
             }
 
-
             if m.message_type in ['image', 'document']:
-             
-                if viewer.role.lower() in ['alumni', 'alumn'] or is_subscribed:
+                if is_subscribed:
                     msg_data["file_url"] = m.file_path
                 else:
                     msg_data["file_url"] = "LOCKED"
-                    msg_data["text"] = " Upgrade to view attachment"
+                    msg_data["text"] = " Upgrade to Premium to view attachments"
 
             output.append(msg_data)
             
         return output, None
     except Exception as e:
-        return None, str(e)
-
+        return None, f"Error: {str(e)}"
 
 def update_message_logic(message_id, sender_id, new_text):
     try:

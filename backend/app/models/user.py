@@ -84,7 +84,32 @@ class Subscription(db.Model):
     expiry_date = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     last_payment_date = db.Column(db.DateTime, default=datetime.utcnow)
-    student = db.relationship('User', backref=db.backref('subscription', uselist=False))  
+    student = db.relationship('User', backref=db.backref('subscription', uselist=False))   
     
+class Rating(db.Model):
+    __tablename__ = 'ratings'
+    id = db.Column(db.Integer, primary_key=True)
+    # Move ondelete inside the ForeignKey()
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    alumni_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    score = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+    id = db.Column(db.Integer, primary_key=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    reason = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='Pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-             
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    notification_type = db.Column(db.String(30))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

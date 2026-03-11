@@ -4,17 +4,17 @@ git clone https://github.com/Ntombenhle2004/Alumni-directory-and-communication-p
 
 ```
 
-2. Checkout to the Assigned Branch
-```bash
-git checkout team-work
-```
-
 3. Install Dependencies
 ```bash
 python -m venv .venv
 source ./.venv/Scripts/activate
 pip install -r requirements.txt
-pip install request
+pip install requests
 cd backend
 python run.py
+```
+
+2. Checkout to the Assigned Branch
+```bash
+git checkout team-work
 ```

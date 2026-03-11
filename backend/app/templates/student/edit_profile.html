@@ -1,0 +1,78 @@
+<div class="main-content">
+    <div class="welcome-card">
+        <h1>My Profile</h1>
+        <p>Manage your professional information and public presence.</p>
+    </div>
+    
+    <div class="profile-header" style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; display: flex; gap: 2rem; align-items: center;">
+        <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold;">
+            {{ user.full_name[:2].upper() }}
+        </div>
+        <div>
+            <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ user.full_name }}</h2>
+            <p style="color: #666; margin-bottom: 0.5rem;">
+                <i class="fas fa-briefcase"></i> {{ profile.job_title }} at {{ profile.company }}
+            </p>
+            <p style="color: #666;">
+                <i class="fas fa-graduation-cap"></i> Class of {{ profile.graduation_year }}
+            </p>
+        </div>
+        <button style="margin-left: auto; padding: 0.75rem 2rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
+            <i class="fas fa-edit"></i> Edit Profile
+        </button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+        <div style="background: white; border-radius: 12px; padding: 2rem;">
+            <h3 style="margin-bottom: 1.5rem;">About Me</h3>
+            <p style="color: #666; line-height: 1.6;">{{ profile.bio|default('No bio added yet.') }}</p>
+            
+            <h3 style="margin: 2rem 0 1.5rem;">Industry</h3>
+            <p style="color: #666;">{{ profile.industry|default('Not specified') }}</p>
+        </div>
+
+        <div>
+            <div style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1.5rem;">Skills</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    {% if profile.skills %}
+                        {% for skill in profile.skills.split(',') %}
+                            <span style="background: #e8f0fe; color: #667eea; padding: 0.5rem 1rem; border-radius: 20px;">
+                                {{ skill.strip() }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #999;">No skills added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="background: white; border-radius: 12px; padding: 2rem;">
+                <h3 style="margin-bottom: 1.5rem;">Mentorship</h3>
+                <div>
+                    <p style="margin-bottom: 0.5rem;">
+                        <strong>Status:</strong> 
+                        {% if profile.mentorship_available %}
+                            <span style="color: #27ae60;">Available for mentorship</span>
+                        {% else %}
+                            <span style="color: #e74c3c;">Not available</span>
+                        {% endif %}
+                    </p>
+                    <p>
+                        <strong>Rating:</strong> {{ profile.rating_avg|default(0) }} ⭐ 
+                        ({{ profile.rating_count|default(0) }} reviews)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
+
+{% extends "alumni/base_alumni.html" %}
+
+{% block alumni_content %}
+<div class="welcome-card">
+    <h1>My Profile</h1>
+    <p>Coming soon...</p>
+</div>
+{% endblock %}

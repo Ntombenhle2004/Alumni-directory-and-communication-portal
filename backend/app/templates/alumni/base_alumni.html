@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Alumni Dashboard - {{ super() }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Your existing CSS here */
+    .container {
+        display: flex;
+        height: calc(100vh - 64px - 60px);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .sidebar {
+        width: 280px;
+        background: white;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        padding: 2rem 0;
+        height: 100%;
+        overflow-y: auto;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+    }
+    
+    .sidebar a {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 2rem;
+        color: #555;
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+    
+    .sidebar a:hover {
+        background: #f8f9fa;
+        color: #2c3e50;
+        border-left-color: #667eea;
+    }
+    
+    .sidebar a.active {
+        background: #e8f0fe;
+        color: #2c3e50;
+        border-left-color: #667eea;
+        font-weight: 600;
+    }
+    
+    .sidebar a i {
+        width: 20px;
+        color: #667eea;
+    }
+    
+    .badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: auto;
+    }
+    
+    .main-content {
+        flex: 1;
+        padding: 2rem;
+        background: #f5f5f5;
+        overflow-y: auto;
+        height: 100%;
+    }
+    
+    .welcome-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    @media (max-width: 768px) {
+        .container {
+            flex-direction: column;
+            height: auto;
+            overflow: auto;
+        }
+        
+        .sidebar {
+            width: 100%;
+            height: auto;
+            position: static;
+        }
+        
+        .main-content {
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Sidebar - Only include routes that exist -->
+    <div class="sidebar">
+        <!-- Dashboard - EXISTS -->
+        <a href="{{ url_for('views.alumni_dashboard') }}" class="{% if request.endpoint == 'views.alumni_dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        
+        <!-- My Profile - EXISTS (from profile_routes) -->
+        <a href="{{ url_for('profile_module.alumni_profile_view') }}" class="{% if request.endpoint == 'profile_module.alumni_profile_view' %}active{% endif %}">
+            <i class="fas fa-user"></i> My Profile
+        </a>
+        
+        <!-- Mentorship - EXISTS -->
+        <a href="{{ url_for('views.alumni_mentorship') }}" class="{% if request.endpoint == 'views.alumni_mentorship' %}active{% endif %}">
+            <i class="fas fa-handshake"></i> Mentorship
+        </a>
+        
+        <!-- Messages - EXISTS -->
+        <a href="{{ url_for('views.alumni_messages') }}" class="{% if request.endpoint == 'views.alumni_messages' %}active{% endif %}">
+            <i class="fas fa-envelope"></i> Messages
+            {% if unread_count and unread_count > 0 %}
+                <span class="badge">{{ unread_count }}</span>
+            {% endif %}
+        </a>
+        
+        <!-- Browse Students - You'll need to create this route -->
+        <!-- Commented out until route exists
+        <a href="{{ url_for('views.browse_students') }}" class="{% if request.endpoint == 'views.browse_students' %}active{% endif %}">
+            <i class="fas fa-users"></i> Browse Students
+        </a>
+        -->
+        
+        <!-- Events - EXISTS -->
+        <a href="{{ url_for('events.alumni_events') }}" class="{% if request.endpoint == 'events.alumni_events' %}active{% endif %}">
+            <i class="fas fa-calendar"></i> Events
+        </a>
+        
+        <!-- Settings - Points to profile for now -->
+        <a href="{{ url_for('profile_module.alumni_profile_view') }}" class="{% if request.endpoint == 'profile_module.alumni_profile_view' %}active{% endif %}">
+            <i class="fas fa-cog"></i> Settings
+        </a>
+    </div>
+
+    <!-- Main Content - Scrollable Area -->
+    <div class="main-content">
+        {% block alumni_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

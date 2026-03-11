@@ -1,95 +1,154 @@
-from flask import Blueprint, request, jsonify
-from ..services.auth_service import (
-    create_user, login_user, get_all_users, get_user_by_id, 
-    update_user, delete_user_by_id, create_admin_by_admin
-)
+from flask import Blueprint, request, jsonify, render_template, redirect, session, url_for, flash  
+from ..config.db import db
+from ..models.user import User, StudentProfile, AlumniProfile
+from ..services import auth_service  # This is correct based on your file structure
+import re
 
 auth = Blueprint("auth", __name__)
 
-
-@auth.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    user, error = login_user(data.get("email"), data.get("password"))
-    
-    if error: 
-        return jsonify({"error": error}), 401
-    role = user.role.lower()
-    if role == "admin":
-        dashboard_url = "/admin/dashboard"
-    elif role == "student":
-        dashboard_url = "/student/dashboard"
-    elif role == "alumni":
-        dashboard_url = "/alumni/dashboard"
-    else:
-        dashboard_url = "/home"
-
-    return jsonify({
-        "message": f"Welcome back, {user.full_name}",
-        "user_data": {
-            "id": user.id,
-            "full_name": user.full_name,
-            "email": user.email,
-            "role": user.role,
-            "profile_picture": user.profile_picture 
-        },
-        "redirect_to": dashboard_url
-    }), 200
-
-
-@auth.route("/register", methods=["POST"])
+@auth.route('/register', methods=['GET', 'POST'])
 def register():
-    data = request.get_json()
-    user, error = create_user(
-        data.get("full_name"), 
-        data.get("email"), 
-        data.get("password"), 
-        data.get("role")
-    )
-    if error: return jsonify({"error": error}), 400
-    return jsonify({"message": "User registered successfully", "user_id": user.id}), 201
-
-
-@auth.route("/admin/create", methods=["POST"])
-def admin_create():
-    data = request.get_json()
-    new_admin, error = create_admin_by_admin(data)
-    if error: return jsonify({"error": error}), 400
-    return jsonify({"message": "Admin created", "assigned_id": new_admin.id}), 201
-
-
-
-@auth.route("/users", methods=["GET"])
-def view_all():
-    users = get_all_users()
-    return jsonify([{
-        "id": u.id, 
-        "full_name": u.full_name, 
-        "email": u.email, 
-        "role": u.role,
-        "profile_picture": u.profile_picture
-    } for u in users]), 200
-
-
-@auth.route("/users/<int:id>", methods=["GET", "PUT", "DELETE"])
-def user_ops(id):
-    if request.method == "GET":
-        user = get_user_by_id(id)
-        if not user: return jsonify({"error": "User not found"}), 404
-        return jsonify({
-            "id": user.id, 
-            "full_name": user.full_name, 
-            "email": user.email, 
-            "role": user.role,
-            "profile_picture": user.profile_picture
-        }), 200
+    if request.method == 'GET':
+        print("GET request to /auth/register - redirecting to register page")
+        return redirect(url_for('views.register_page'))
     
-    if request.method == "PUT":
-        user, error = update_user(id, request.get_json())
-        if error: return jsonify({"error": error}), 400
-        return jsonify({"message": "User updated successfully"}), 200
+    print("="*50)
+    print("POST request to /auth/register received")
+    print(f"Request content type: {request.content_type}")
+    print(f"Form data: {request.form}")
     
-    if request.method == "DELETE":
-        success, message = delete_user_by_id(id)
-        if not success: return jsonify({"error": message}), 404
-        return jsonify({"message": message}), 200
+    
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    full_name = data.get('full_name')
+    email = data.get('email')
+    password = data.get('password')
+    confirm_password = data.get('confirm_password')
+    role = data.get('role', 'student')
+
+    print(f"Registration attempt: full_name='{full_name}', email='{email}', role='{role}'")
+    print(f"Password length: {len(password) if password else 0}, Confirm password length: {len(confirm_password) if confirm_password else 0}")
+    
+
+    if not all([full_name, email, password, confirm_password]):
+        error = "All fields are required"
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        return render_template("public/register.html", error=error)
+    
+    
+    if password != confirm_password:
+        error = "Passwords do not match"
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        return render_template("public/register.html", error=error)
+    
+    
+    new_user, error = auth_service.create_user(full_name, email, password, role)
+    
+    if error:
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        return render_template("public/register.html", error=error)
+    
+    try:
+        if role == 'student':
+            profile = StudentProfile(
+                user_id=new_user.id,
+                course=data.get('course', ''),
+                graduation_year=data.get('graduation_year', None) if data.get('graduation_year') else None,
+                interests=data.get('interests', '')
+            )
+            db.session.add(profile)
+        elif role == 'alumni':
+            profile = AlumniProfile(
+                user_id=new_user.id,
+                job_title=data.get('job_title', ''),
+                company=data.get('company', ''),
+                industry=data.get('industry', ''),
+                skills=data.get('skills', ''),
+                graduation_year=data.get('graduation_year', None) if data.get('graduation_year') else None
+            )
+            db.session.add(profile)
+        
+        db.session.commit()
+        print("Profile created and committed successfully")
+    except Exception as e:
+        db.session.rollback()
+
+        db.session.delete(new_user)
+        db.session.commit()
+        error = f"Error creating profile: {str(e)}"
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        return render_template("public/register.html", error=error)
+    
+    print("Registration successful! Redirecting to login page")
+    flash("Registration successful! Please login.", "success")
+    return redirect(url_for('views.login_page'))
+
+@auth.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        print("GET request to /auth/login - redirecting to login page")
+        return redirect(url_for('views.login_page'))
+    
+    print("POST request to /auth/login received")
+    print(f"Form data: {request.form}")
+    
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+    
+    email = data.get('email')
+    password = data.get('password')
+    
+    print(f"Login attempt for email: {email}")
+    
+    if not email or not password:
+        error = "Email and password are required"
+        print(f"Validation error: {error}")
+        flash(error, "error")
+        return render_template("public/login.html", error=error)
+    
+    
+    user, error = auth_service.login_user(email, password)
+    
+    if error or not user:
+        error = error or "Invalid email or password"
+        print(f"Login failed: {error}")
+        flash(error, "error")
+        return render_template("public/login.html", error=error)
+    
+    print(f"Login successful for user: {user.full_name} (ID: {user.id}, Role: {user.role})")
+    
+
+    from flask import session
+    session['user_id'] = user.id
+    session['user_role'] = user.role
+    session['user_name'] = user.full_name
+    
+    flash(f"Welcome back, {user.full_name}!", "success")
+    
+    
+    if user.role == 'admin':
+        print("Redirecting to admin dashboard")
+        return redirect(url_for('views.admin_dashboard'))
+    elif user.role == 'alumni':
+        print("Redirecting to alumni dashboard")
+        return redirect(url_for('views.alumni_dashboard'))
+    else:  
+        print("Redirecting to student dashboard")
+        return redirect(url_for('student.dashboard'))
+
+
+@auth.route('/logout')
+def logout():
+    session.clear()
+    flash("You have been logged out successfully.", "success")
+    return redirect(url_for('views.home'))

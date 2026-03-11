@@ -17,27 +17,49 @@ def verify_password(password, hashed):
 
 def create_user(full_name, email, password, role):
     """Standard registration for Students and Alumni."""
+    print(f"[auth_service] Creating user: {full_name}, {email}, role={role}")
+    
     if not all([full_name, email, password, role]):
+        print("[auth_service] Missing required fields")
         return None, "Error: full_name, email, password, and role are all required."
 
     if role.lower() == "admin":
+        print("[auth_service] Admin self-registration attempted")
         return None, "Security Error: Admins cannot self-register."
 
     try:
-        if User.query.filter_by(email=email).first():
+        # Check if user already exists
+        print(f"[auth_service] Checking if email {email} already exists")
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            print(f"[auth_service] Email {email} already registered")
             return None, "Error: Email already registered."
 
+        # Hash the password
+        print("[auth_service] Hashing password...")
+        hashed_password = hash_password(password)
+        print(f"[auth_service] Password hashed successfully: {hashed_password[:30]}...")
+        
+        # Create new user
+        print("[auth_service] Creating user object...")
         new_user = User(
             full_name=full_name,
             email=email,
-            password_hash=hash_password(password),
+            password_hash=hashed_password,
             role=role.lower()
         )
         db.session.add(new_user)
+        print("[auth_service] Committing user to database...")
         db.session.commit()
+        print(f"[auth_service] User created with ID: {new_user.id}")
+        
         return new_user, None
+        
     except Exception as e:
         db.session.rollback()
+        print(f"[auth_service] ERROR creating user: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None, str(e)
 
 def login_user(email, password):

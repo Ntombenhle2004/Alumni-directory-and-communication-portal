@@ -113,3 +113,71 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     notification_type = db.Column(db.String(30))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Event(db.Model):
+    __tablename__ = 'events'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    event_type = db.Column(db.String(50), nullable=False)  # webinar, workshop, networking, social, etc.
+    event_mode = db.Column(db.String(20), nullable=False)  # online, in-person, hybrid
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    registration_deadline = db.Column(db.DateTime, nullable=True)
+    location = db.Column(db.String(200), nullable=True)
+    online_link = db.Column(db.String(500), nullable=True)  # Zoom/Teams link for online events
+    organizer_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
+    organizer = db.relationship('User', backref='organized_events', foreign_keys=[organizer_id])
+    capacity = db.Column(db.Integer, nullable=True)  # Maximum attendees (None = unlimited)
+    price = db.Column(db.Float, default=0.0)  # 0.0 for free events
+    image_url = db.Column(db.String(500), nullable=True)
+    is_published = db.Column(db.Boolean, default=False)
+    is_featured = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), default='upcoming')  # upcoming, ongoing, completed, cancelled
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    attendees = db.relationship('EventRegistration', backref='event', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Event {self.title}>'
+    
+    @property
+    def registered_count(self):
+        return len([r for r in self.attendees if r.status == 'registered'])
+    
+    @property
+    def is_full(self):
+        if self.capacity:
+            return self.registered_count >= self.capacity
+        return False
+    
+    @property
+    def registration_available(self):
+        if not self.is_published or self.status != 'upcoming':
+            return False
+        if self.registration_deadline and datetime.utcnow() > self.registration_deadline:
+            return False
+        if self.is_full:
+            return False
+        return True
+
+class EventRegistration(db.Model):
+    __tablename__ = 'event_registrations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='registered')  # registered, attended, cancelled, waitlisted
+    payment_status = db.Column(db.String(20), default='pending')  # pending, paid, free, refunded
+    payment_amount = db.Column(db.Float, default=0.0)
+    payment_date = db.Column(db.DateTime, nullable=True)
+    checked_in = db.Column(db.Boolean, default=False)
+    check_in_time = db.Column(db.DateTime, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    user = db.relationship('User', backref='event_registrations')
+    __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_registration'),)
+    def __repr__(self):
+        return f'<EventRegistration {self.event_id}:{self.user_id}>'

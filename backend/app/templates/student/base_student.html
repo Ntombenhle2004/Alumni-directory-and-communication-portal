@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - {{ super() }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .student-container {
+        display: flex;
+        min-height: calc(100vh - 64px - 60px); 
+    }
+    
+    .student-sidebar {
+        width: 280px;
+        background: white;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        padding: 2rem 0;
+        position: sticky;
+        top: 64px;
+        height: calc(100vh - 64px);
+        overflow-y: auto;
+    }
+    
+    .student-sidebar a {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 2rem;
+        color: #555;
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+    
+    .student-sidebar a:hover {
+        background: #f8f9fa;
+        color: #2c3e50;
+        border-left-color: #667eea;
+    }
+    
+    .student-sidebar a.active {
+        background: #e8f0fe;
+        color: #2c3e50;
+        border-left-color: #667eea;
+        font-weight: 600;
+    }
+    
+    .student-sidebar a i {
+        width: 20px;
+        color: #667eea;
+    }
+    
+    .student-sidebar .badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: auto;
+    }
+    
+    .student-main-content {
+        flex: 1;
+        padding: 2rem;
+        background: #f5f5f5;
+    }
+    
+    .student-welcome-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .student-welcome-card h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .student-welcome-card p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+    
+    @media (max-width: 768px) {
+        .student-container {
+            flex-direction: column;
+        }
+        
+        .student-sidebar {
+            width: 100%;
+            position: static;
+            height: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="student-container">
+    <!-- Sidebar -->
+    <div class="student-sidebar">
+        <a href="{{ url_for('student.dashboard') }}" class="{% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="{{ url_for('profile_module.student_profile_view') }}" class="{% if request.endpoint == 'profile_module.student_profile_view' %}active{% endif %}">
+        <i class="fas fa-user"></i> My Profile
+    </a>
+        <a href="{{ url_for('student.my_mentors') }}" class="{% if request.endpoint == 'student.my_mentors' %}active{% endif %}">
+            <i class="fas fa-handshake"></i> My Mentors
+        </a>
+        <a href="{{ url_for('student.mentorship_requests') }}" class="{% if request.endpoint == 'student.mentorship_requests' %}active{% endif %}">
+            <i class="fas fa-clock"></i> Mentorship Requests
+            {% if pending_requests_count and pending_requests_count > 0 %}
+                <span class="badge">{{ pending_requests_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('student.messages') }}" class="{% if request.endpoint == 'student.messages' %}active{% endif %}">
+            <i class="fas fa-envelope"></i> Messages
+            {% if unread_messages_count and unread_messages_count > 0 %}
+                <span class="badge">{{ unread_messages_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('student.browse_alumni') }}" class="{% if request.endpoint == 'student.browse_alumni' %}active{% endif %}">
+            <i class="fas fa-users"></i> Browse Alumni
+        </a>
+        <a href="{{ url_for('student.events') }}" class="{% if request.endpoint == 'student.events' %}active{% endif %}">
+            <i class="fas fa-calendar"></i> Events
+        </a>
+        <a href="{{ url_for('student.subscription') }}" class="{% if request.endpoint == 'student.subscription' %}active{% endif %}">
+            <i class="fas fa-credit-card"></i> Subscription
+        </a>
+        <a href="{{ url_for('student.settings') }}" class="{% if request.endpoint == 'student.settings' %}active{% endif %}">
+            <i class="fas fa-cog"></i> Settings
+        </a>
+    </div>
+
+    
+    <div class="student-main-content">
+        {% block student_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

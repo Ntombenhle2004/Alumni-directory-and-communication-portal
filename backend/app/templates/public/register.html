@@ -1,0 +1,94 @@
+<form action="/auth/register" method="POST">
+    <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="confirm_password">Confirm Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+    </div>
+    
+    <div class="form-group">
+        <label>Select Role</label>
+        <div class="role-selector">
+            <div class="role-option">
+                <input type="radio" id="student" name="role" value="student" checked>
+                <label for="student">Student</label>
+            </div>
+            <div class="role-option">
+                <input type="radio" id="alumni" name="role" value="alumni">
+                <label for="alumni">Alumni</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student fields -->
+    <div id="student-fields">
+        <div class="form-group">
+            <label for="course">Course</label>
+            <input type="text" id="course" name="course">
+        </div>
+        <div class="form-group">
+            <label for="graduation_year">Graduation Year</label>
+            <input type="number" id="graduation_year" name="graduation_year">
+        </div>
+        <div class="form-group">
+            <label for="interests">Interests</label>
+            <textarea id="interests" name="interests"></textarea>
+        </div>
+    </div>
+    
+    <!-- Alumni fields (hidden by default) -->
+    <div id="alumni-fields" style="display: none;">
+        <div class="form-group">
+            <label for="job_title">Job Title</label>
+            <input type="text" id="job_title" name="job_title">
+        </div>
+        <div class="form-group">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company">
+        </div>
+        <div class="form-group">
+            <label for="industry">Industry</label>
+            <input type="text" id="industry" name="industry">
+        </div>
+        <div class="form-group">
+            <label for="skills">Skills</label>
+            <textarea id="skills" name="skills"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="graduation_year_alumni">Graduation Year</label>
+            <input type="number" id="graduation_year_alumni" name="graduation_year">
+        </div>
+    </div>
+    
+    <button type="submit">Register</button>
+</form>
+
+<script>
+    // Toggle between student and alumni fields
+    document.getElementById('student').addEventListener('change', function() {
+        if(this.checked) {
+            document.getElementById('student-fields').style.display = 'block';
+            document.getElementById('alumni-fields').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('alumni').addEventListener('change', function() {
+        if(this.checked) {
+            document.getElementById('student-fields').style.display = 'none';
+            document.getElementById('alumni-fields').style.display = 'block';
+        }
+    });
+</script>

@@ -1,0 +1,37 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Mentorship - Alumni Portal{% endblock %}
+
+{% block alumni_content %}
+<div class="welcome-card">
+    <h1>Mentorship Program</h1>
+    <p>Manage your mentoring relationships and requests.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    
+    <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <h2 style="margin-bottom: 1rem;">Pending Requests ({{ pending_requests|length }})</h2>
+        {% for request in pending_requests %}
+        <div style="padding: 1rem; border-bottom: 1px solid #eee;">
+            <p>Request from Student ID: {{ request.student_id }}</p>
+            <p style="color: #666; font-size: 0.9rem;">{{ request.message }}</p>
+        </div>
+        {% else %}
+        <p style="color: #999; text-align: center;">No pending requests</p>
+        {% endfor %}
+    </div>
+    
+   
+    <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <h2 style="margin-bottom: 1rem;">Active Mentees ({{ active_mentees|length }})</h2>
+        {% for mentee in active_mentees %}
+        <div style="padding: 1rem; border-bottom: 1px solid #eee;">
+            <p>Mentee ID: {{ mentee.student_id }}</p>
+        </div>
+        {% else %}
+        <p style="color: #999; text-align: center;">No active mentees</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

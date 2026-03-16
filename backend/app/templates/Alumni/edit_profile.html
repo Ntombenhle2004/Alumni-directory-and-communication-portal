@@ -1,0 +1,65 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Edit Profile - Alumni Portal{% endblock %}
+
+{% block alumni_content %}
+<div class="welcome-card">
+    <h1>Edit Profile</h1>
+    <p>Update your professional information.</p>
+</div>
+
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <form method="POST" action="{{ url_for('profile_module.update_profile') }}">
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Full Name</label>
+            <input type="text" name="full_name" value="{{ user.full_name }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+            <input type="email" name="email" value="{{ user.email }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Job Title</label>
+            <input type="text" name="job_title" value="{{ profile_data.details.job_title or '' }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Company</label>
+            <input type="text" name="company" value="{{ profile_data.details.company or '' }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Industry</label>
+            <input type="text" name="industry" value="{{ profile_data.details.industry or '' }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Skills (comma separated)</label>
+            <textarea name="skills" rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">{{ profile_data.details.skills or '' }}</textarea>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" name="mentorship_available" value="true" {% if profile_data.details.mentorship_available %}checked{% endif %}>
+                <span>Available for mentorship</span>
+            </label>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" style="flex: 1; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                Save Changes
+            </button>
+            <a href="{{ url_for('profile_module.alumni_profile_view') }}" style="flex: 1; padding: 1rem; background: #e74c3c; color: white; border-radius: 8px; text-align: center; text-decoration: none;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

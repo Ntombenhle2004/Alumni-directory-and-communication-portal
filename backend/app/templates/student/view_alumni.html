@@ -1,0 +1,242 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}{{ alumni.full_name }} - Alumni Profile{% endblock %}
+
+{% block student_content %}
+<!-- Back Button -->
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('student.dashboard') }}" style="color: #667eea; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Alumni Profile Header -->
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem; color: white; position: relative; overflow: hidden;">
+    <div style="position: relative; z-index: 2;">
+        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+            <!-- Profile Picture -->
+            <div style="width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.3);">
+                <div style="width: 110px; height: 110px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; font-weight: bold;">
+                    {{ alumni.full_name[:2].upper() }}
+                </div>
+            </div>
+            
+            <!-- Basic Info -->
+            <div style="flex: 1;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ alumni.full_name }}</h1>
+                {% if profile %}
+                    <p style="font-size: 1.2rem; opacity: 0.95; margin-bottom: 0.5rem;">
+                        <i class="fas fa-briefcase"></i> {{ profile.job_title or 'Professional' }}
+                    </p>
+                    <p style="font-size: 1.1rem; opacity: 0.9;">
+                        <i class="fas fa-building"></i> {{ profile.company or 'Company not specified' }}
+                    </p>
+                {% endif %}
+            </div>
+            
+            <!-- Mentorship Status Badge -->
+            {% if profile and profile.mentorship_available %}
+            <div style="background: rgba(255,255,255,0.2); padding: 0.75rem 1.5rem; border-radius: 40px; border: 2px solid white;">
+                <i class="fas fa-check-circle"></i> Available for Mentorship
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <!-- Left Column - Profile Details -->
+    <div>
+        <!-- About Section -->
+        <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-user-circle" style="color: #667eea;"></i> About
+            </h2>
+            <p style="color: #666; line-height: 1.8;">
+                {{ profile.bio or 'No bio provided.' }}
+            </p>
+        </div>
+        
+        <!-- Experience Section -->
+        <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-briefcase" style="color: #667eea;"></i> Experience
+            </h2>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 600; color: #2c3e50;">{{ profile.job_title or 'Current Position' }}</h3>
+                <p style="color: #667eea; font-weight: 500;">{{ profile.company or 'Company' }}</p>
+                <p style="color: #666; font-size: 0.9rem;">{{ profile.industry or 'Industry not specified' }}</p>
+            </div>
+            
+            {% if profile.graduation_year %}
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #666;">
+                <i class="fas fa-graduation-cap" style="color: #667eea;"></i>
+                <span>Graduated: Class of {{ profile.graduation_year }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Skills Section -->
+        {% if profile and profile.skills %}
+        <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-code" style="color: #667eea;"></i> Skills
+            </h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                {% for skill in profile.skills.split(',') %}
+                <span style="background: #e8f0fe; color: #667eea; padding: 0.6rem 1.2rem; border-radius: 30px; font-size: 0.95rem; font-weight: 500;">
+                    {{ skill.strip() }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column - Actions & Stats -->
+    <div>
+        <!-- Mentorship Request Card -->
+        <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 2rem;">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-handshake" style="color: #667eea;"></i> Mentorship
+            </h2>
+            
+            {% if mentorship_request %}
+                <!-- Existing Request Status -->
+                <div style="text-align: center; padding: 1rem;">
+                    {% if mentorship_request.status.lower() == 'pending' %}
+                        <div style="background: #f39c12; color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                            <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <h3 style="margin-bottom: 0.5rem;">Request Pending</h3>
+                            <p style="opacity: 0.9;">Your mentorship request is waiting for {{ alumni.full_name }}'s response.</p>
+                            <p style="font-size: 0.9rem; margin-top: 1rem;">Sent on {{ mentorship_request.request_date.strftime('%b %d, %Y') }}</p>
+                        </div>
+                        <form action="{{ url_for('student.cancel_mentorship_request', request_id=mentorship_request.id) }}" method="POST">
+                            <button type="submit" style="width: 100%; padding: 0.8rem; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="return confirm('Are you sure you want to cancel this request?')">
+                                <i class="fas fa-times"></i> Cancel Request
+                            </button>
+                        </form>
+                        
+                    {% elif mentorship_request.status.lower() == 'accepted' %}
+                        <div style="background: #27ae60; color: white; padding: 1.5rem; border-radius: 12px;">
+                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <h3 style="margin-bottom: 0.5rem;">You're Connected!</h3>
+                            <p style="opacity: 0.9;">{{ alumni.full_name }} has accepted your mentorship request.</p>
+                            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                <a href="{{ url_for('student.messages') }}" style="flex: 1; padding: 0.8rem; background: white; color: #27ae60; border-radius: 8px; text-decoration: none; font-weight: 500;">
+                                    <i class="fas fa-comment"></i> Message
+                                </a>
+                                <a href="#" style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.2); color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
+                                    <i class="fas fa-calendar"></i> Schedule
+                                </a>
+                            </div>
+                        </div>
+                        
+                    {% elif mentorship_request.status.lower() == 'rejected' %}
+                        <div style="background: #e74c3c; color: white; padding: 1.5rem; border-radius: 12px;">
+                            <i class="fas fa-times-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <h3 style="margin-bottom: 0.5rem;">Request Declined</h3>
+                            <p style="opacity: 0.9;">{{ alumni.full_name }} is not available for mentorship at this time.</p>
+                            <p style="font-size: 0.9rem; margin-top: 1rem;">You can try reaching out to other alumni.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+            {% else %}
+                <!-- Send New Request Form -->
+                {% if profile and profile.mentorship_available %}
+                    <form action="{{ url_for('student.request_mentorship', alumni_id=alumni.id) }}" method="POST">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50;">
+                                Why do you want {{ alumni.full_name }} as your mentor?
+                            </label>
+                            <textarea name="message" rows="4" placeholder="Tell them about your goals, what you hope to learn, and why you're interested in their guidance..." 
+                                      style="width: 100%; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 0.95rem; resize: vertical;"
+                                      required></textarea>
+                            <p style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">
+                                <i class="fas fa-info-circle"></i> A personalized message increases your chances of acceptance.
+                            </p>
+                        </div>
+                        
+                        <button type="submit" style="width: 100%; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.background='#764ba2'" onmouseout="this.style.background='#667eea'">
+                            <i class="fas fa-paper-plane"></i> Send Mentorship Request
+                        </button>
+                    </form>
+                {% else %}
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 2rem; text-align: center;">
+                        <i class="fas fa-ban" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #666; margin-bottom: 0.5rem;">Not Available for Mentorship</h3>
+                        <p style="color: #999;">{{ alumni.full_name }} is currently not accepting new mentorship requests.</p>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+        <!-- Stats Card -->
+        <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-chart-bar" style="color: #667eea;"></i> Stats
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center;">
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ profile.rating_count or 0 }}</div>
+                    <div style="color: #666; font-size: 0.9rem;">Reviews</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">
+                         {{ "%.1f"|format(avg_rating or 0) }}
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem;">Average Rating</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ profile.mentee_count or 0 }}</div>
+                    <div style="color: #666; font-size: 0.9rem;">Current Mentees</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ profile.years_experience or 0 }}+</div>
+                    <div style="color: #666; font-size: 0.9rem;">Years Experience</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section -->
+{% if ratings %}
+<div style="margin-top: 2rem; background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-star" style="color: #f1c40f;"></i> Reviews ({{ ratings|length }})
+    </h2>
+    
+    <div style="display: grid; gap: 1.5rem;">
+        {% for rating in ratings %}
+        <div style="border-bottom: 1px solid #f0f0f0; padding-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                    {{ rating.student_name[:2].upper() if rating.student_name else 'S' }}
+                </div>
+                <div>
+                    <strong>{{ rating.student_name or 'Student' }}</strong>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: #f1c40f;">
+                            {% for i in range(rating.score) %}{% endfor %}
+                        </span>
+                        <span style="color: #999; font-size: 0.85rem;">{{ rating.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+            {% if rating.comment %}
+            <p style="color: #666; margin-left: 3rem;">{{ rating.comment }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

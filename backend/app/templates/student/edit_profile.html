@@ -1,78 +1,100 @@
-<div class="main-content">
-    <div class="welcome-card">
-        <h1>My Profile</h1>
-        <p>Manage your professional information and public presence.</p>
-    </div>
-    
-    <div class="profile-header" style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; display: flex; gap: 2rem; align-items: center;">
-        <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold;">
-            {{ user.full_name[:2].upper() }}
-        </div>
-        <div>
-            <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ user.full_name }}</h2>
-            <p style="color: #666; margin-bottom: 0.5rem;">
-                <i class="fas fa-briefcase"></i> {{ profile.job_title }} at {{ profile.company }}
-            </p>
-            <p style="color: #666;">
-                <i class="fas fa-graduation-cap"></i> Class of {{ profile.graduation_year }}
-            </p>
-        </div>
-        <button style="margin-left: auto; padding: 0.75rem 2rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-            <i class="fas fa-edit"></i> Edit Profile
-        </button>
-    </div>
+{% extends "student/base_student.html" %}
 
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
-        <div style="background: white; border-radius: 12px; padding: 2rem;">
-            <h3 style="margin-bottom: 1.5rem;">About Me</h3>
-            <p style="color: #666; line-height: 1.6;">{{ profile.bio|default('No bio added yet.') }}</p>
-            
-            <h3 style="margin: 2rem 0 1.5rem;">Industry</h3>
-            <p style="color: #666;">{{ profile.industry|default('Not specified') }}</p>
+{% block title %}Edit Profile - Alumni Portal{% endblock %}
+
+{% block student_content %}
+<div class="student-welcome-card">
+    <h1>Edit Profile</h1>
+    <p>Update your personal information and preferences.</p>
+</div>
+
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <form method="POST" action="{{ url_for('profile_module.update_profile') }}">
+        <!-- Basic Information -->
+        <h3 style="margin-bottom: 1.5rem;">Basic Information</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Full Name</label>
+            <input type="text" name="full_name" value="{{ user.full_name }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email Address</label>
+            <input type="email" name="email" value="{{ user.email }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
         </div>
 
-        <div>
-            <div style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1.5rem;">Skills</h3>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                    {% if profile.skills %}
-                        {% for skill in profile.skills.split(',') %}
-                            <span style="background: #e8f0fe; color: #667eea; padding: 0.5rem 1rem; border-radius: 20px;">
-                                {{ skill.strip() }}
-                            </span>
-                        {% endfor %}
-                    {% else %}
-                        <p style="color: #999;">No skills added yet.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div style="background: white; border-radius: 12px; padding: 2rem;">
-                <h3 style="margin-bottom: 1.5rem;">Mentorship</h3>
-                <div>
-                    <p style="margin-bottom: 0.5rem;">
-                        <strong>Status:</strong> 
-                        {% if profile.mentorship_available %}
-                            <span style="color: #27ae60;">Available for mentorship</span>
-                        {% else %}
-                            <span style="color: #e74c3c;">Not available</span>
-                        {% endif %}
-                    </p>
-                    <p>
-                        <strong>Rating:</strong> {{ profile.rating_avg|default(0) }} ⭐ 
-                        ({{ profile.rating_count|default(0) }} reviews)
-                    </p>
-                </div>
-            </div>
+        <!-- Academic Information -->
+        <h3 style="margin: 2rem 0 1.5rem;">Academic Information</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Course/Program</label>
+            <input type="text" name="course" value="{{ profile_data.details.course or '' }}" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
         </div>
-    </div>
-</div> 
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Graduation Year</label>
+            <select name="graduation_year" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                <option value="">Select Year</option>
+                {% for year in range(2020, 2031) %}
+                    <option value="{{ year }}" {% if profile_data.details.graduation_year == year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-{% extends "alumni/base_alumni.html" %}
+        <!-- Interests -->
+        <h3 style="margin: 2rem 0 1.5rem;">Interests</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Interests (comma separated)</label>
+            <textarea name="interests" rows="4" 
+                      style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">{{ profile_data.details.interests or '' }}</textarea>
+            <p style="color: #666; margin-top: 0.5rem; font-size: 0.9rem;">Example: Technology, Sports, Music, Reading</p>
+        </div>
 
-{% block alumni_content %}
-<div class="welcome-card">
-    <h1>My Profile</h1>
-    <p>Coming soon...</p>
+        <!-- Subscription -->
+        <h3 style="margin: 2rem 0 1.5rem;">Subscription</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="is_subscribed" value="true" {% if profile_data.details.is_subscribed %}checked{% endif %}>
+                <span style="font-weight: 500;">Subscribe to premium features</span>
+            </label>
+            <p style="color: #666; margin-top: 0.5rem; font-size: 0.9rem;">Premium subscription gives you access to advanced mentorship features and networking opportunities.</p>
+        </div>
+
+        <!-- Change Password -->
+        <h3 style="margin: 2rem 0 1.5rem;">Change Password</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Current Password</label>
+            <input type="password" name="current_password" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">New Password</label>
+            <input type="password" name="new_password" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Confirm New Password</label>
+            <input type="password" name="confirm_password" 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+        </div>
+
+        <!-- Form Actions -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" style="flex: 1; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{{ url_for('profile_module.student_profile_view') }}" style="flex: 1; padding: 1rem; background: #e74c3c; color: white; border-radius: 8px; font-size: 1rem; text-align: center; text-decoration: none;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
 </div>
 {% endblock %}

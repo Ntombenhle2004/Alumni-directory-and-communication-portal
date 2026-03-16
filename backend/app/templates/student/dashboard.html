@@ -1,41 +1,231 @@
-{% extends "alumni/base_alumni.html" %}
+{% extends "student/base_student.html" %}
 
-{% block alumni_content %}
-<div class="welcome-card">
-    <h1>Welcome back, {{ user.full_name }}! 👋</h1>
-    <p>Here's what's happening with your mentorship activities and network.</p>
+{% block student_content %}
+<div class="student-welcome-card">
+    <h1>Welcome back, {{ user.full_name }}!</h1>
+    <p>Discover alumni, find mentors, and grow your network.</p>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Active Mentees</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ active_mentees_count|default(0) }}</div>
+<!-- Profile Header -->
+<div style="background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        {{ user.full_name[:2].upper() }}
     </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Pending Requests</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ pending_requests|default(0) }}</div>
-    </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Profile Views</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ profile_views|default(0) }}</div>
-    </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Rating</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ profile.rating_avg|default(0) }} ⭐</div>
-    </div>
-</div>
-
-<div style="background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <h2 style="margin-bottom: 1rem;">Recent Activity</h2>
-    {% for activity in recent_activities %}
-    <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 1rem;">
-        <i class="fas {{ activity.icon }}" style="color: #667eea;"></i>
-        <div style="flex: 1;">
-            <div style="font-weight: bold;">{{ activity.title }}</div>
-            <div style="color: #666; font-size: 0.9rem;">{{ activity.description }}</div>
+    <div style="flex: 1;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">{{ user.full_name }}</h2>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #666; font-size: 0.9rem;">
+                <i class="fas fa-envelope" style="color: #667eea;"></i>
+                <span>{{ user.email }}</span>
+            </div>
+            {% if student_profile %}
+                {% if student_profile.course %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #666; font-size: 0.9rem;">
+                    <i class="fas fa-graduation-cap" style="color: #667eea;"></i>
+                    <span>{{ student_profile.course }}</span>
+                </div>
+                {% endif %}
+                {% if student_profile.graduation_year %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #666; font-size: 0.9rem;">
+                    <i class="fas fa-calendar" style="color: #667eea;"></i>
+                    <span>Class of {{ student_profile.graduation_year }}</span>
+                </div>
+                {% endif %}
+            {% endif %}
         </div>
-        <div style="color: #999; font-size: 0.85rem;">{{ activity.time }}</div>
+    </div>
+    <a href="{{ url_for('profile_module.student_profile_view') }}" style="padding: 0.6rem 1.5rem; background: #667eea; color: white; border-radius: 25px; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+       onmouseover="this.style.background='#764ba2'" onmouseout="this.style.background='#667eea'">
+        <i class="fas fa-user"></i> View Profile
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    <div style="background: white; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
+        <div style="color: #667eea; font-size: 1.5rem; margin-bottom: 0.25rem;">
+            <i class="fas fa-handshake"></i>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ active_mentors_count|default(0) }}</div>
+        <div style="font-size: 0.85rem; color: #666;">Active Mentors</div>
+    </div>
+    
+    <div style="background: white; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
+        <div style="color: #f39c12; font-size: 1.5rem; margin-bottom: 0.25rem;">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ pending_requests_count|default(0) }}</div>
+        <div style="font-size: 0.85rem; color: #666;">Pending Requests</div>
+    </div>
+    
+    <div style="background: white; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
+        <div style="color: #27ae60; font-size: 1.5rem; margin-bottom: 0.25rem;">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ unread_messages_count|default(0) }}</div>
+        <div style="font-size: 0.85rem; color: #666;">Unread Messages</div>
+    </div>
+    
+    <div style="background: white; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
+        <div style="color: #e74c3c; font-size: 1.5rem; margin-bottom: 0.25rem;">
+            <i class="fas fa-calendar"></i>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ upcoming_events_count|default(0) }}</div>
+        <div style="font-size: 0.85rem; color: #666;">Upcoming Events</div>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div style="background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <form method="GET" action="{{ url_for('student.search_alumni') }}" id="searchForm">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1; position: relative;">
+                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #999;"></i>
+                <input type="text" 
+                       name="q" 
+                       style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.5rem; border: 2px solid #f0f0f0; border-radius: 30px; font-size: 0.95rem;"
+                       placeholder="Search alumni by name, skills, or company..."
+                       value="{{ search_query or '' }}">
+            </div>
+            <button type="submit" style="padding: 0.8rem 2rem; background: #667eea; color: white; border: none; border-radius: 30px; font-size: 0.95rem; cursor: pointer;">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <select name="industry" style="padding: 0.6rem 1rem; border: 2px solid #f0f0f0; border-radius: 25px; font-size: 0.9rem;" onchange="this.form.submit()">
+                <option value="">All Industries</option>
+                <option value="technology" {% if industry_filter == 'technology' %}selected{% endif %}>Technology</option>
+                <option value="finance" {% if industry_filter == 'finance' %}selected{% endif %}>Finance</option>
+                <option value="healthcare" {% if industry_filter == 'healthcare' %}selected{% endif %}>Healthcare</option>
+                <option value="education" {% if industry_filter == 'education' %}selected{% endif %}>Education</option>
+                <option value="consulting" {% if industry_filter == 'consulting' %}selected{% endif %}>Consulting</option>
+            </select>
+            
+            <select name="mentorship" style="padding: 0.6rem 1rem; border: 2px solid #f0f0f0; border-radius: 25px; font-size: 0.9rem;" onchange="this.form.submit()">
+                <option value="">Mentorship Availability</option>
+                <option value="available" {% if mentorship_filter == 'available' %}selected{% endif %}>Available for Mentorship</option>
+            </select>
+            
+            <select name="sort" style="padding: 0.6rem 1rem; border: 2px solid #f0f0f0; border-radius: 25px; font-size: 0.9rem;" onchange="this.form.submit()">
+                <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Most Recent</option>
+                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name A-Z</option>
+                <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+            </select>
+            
+            {% if search_query or industry_filter or mentorship_filter %}
+            <button type="button" onclick="clearFilters()" style="padding: 0.6rem 1.5rem; background: #f0f0f0; border: none; border-radius: 25px; font-size: 0.9rem; cursor: pointer;">
+                <i class="fas fa-times"></i> Clear Filters
+            </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Alumni Directory Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 600; color: #2c3e50; margin: 0;">
+        <i class="fas fa-users" style="color: #667eea; margin-right: 0.75rem;"></i> 
+        {% if total_alumni > 0 %}
+            Alumni Directory ({{ total_alumni }})
+        {% else %}
+            Alumni Directory
+        {% endif %}
+    </h2>
+    {% if total_alumni > 0 %}
+    <span style="font-size: 0.9rem; color: #666;">Page {{ current_page }} of {{ total_pages }}</span>
+    {% endif %}
+</div>
+
+<!-- Alumni Cards Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+    {% for alumni in alumni_list %}
+    <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
+        <div style="height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative;">
+            <div style="position: absolute; bottom: -35px; left: 20px;">
+                <div style="width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <div style="width: 62px; height: 62px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: 600;">
+                        {{ alumni.full_name[:2].upper() }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 45px 20px 20px 20px;">
+            <div style="margin-bottom: 12px;">
+                <h3 style="font-size: 1.2rem; font-weight: 600; color: #2c3e50; margin: 0 0 4px 0;">{{ alumni.full_name }}</h3>
+                {% if alumni.profile %}
+                    <p style="font-size: 0.9rem; color: #667eea; margin: 0; font-weight: 500;">{{ alumni.profile.job_title or 'Professional' }}</p>
+                    <p style="font-size: 0.85rem; color: #666; margin: 2px 0 0 0;">{{ alumni.profile.company or 'Company not specified' }}</p>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 12px; padding: 8px 0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+                {% if alumni.profile and alumni.profile.graduation_year %}
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                    <i class="fas fa-graduation-cap" style="color: #667eea; font-size: 0.8rem;"></i>
+                    <span style="font-size: 0.8rem; color: #666;">{{ alumni.profile.graduation_year }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                <a href="{{ url_for('student.view_alumni', alumni_id=alumni.id) }}" 
+                   style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.4rem 1rem; background: #667eea; color: white; border-radius: 20px; font-size: 0.8rem; font-weight: 500; text-decoration: none;">
+                    View Profile
+                    <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: white; border-radius: 16px;">
+        <div style="width: 70px; height: 70px; background: #f8f9fa; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <i class="fas fa-search" style="font-size: 1.8rem; color: #aaa;"></i>
+        </div>
+        <h3 style="font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem;">No Alumni Found</h3>
+        <p style="color: #666; margin-bottom: 1.5rem;">Try adjusting your search filters or check back later.</p>
+        <button onclick="clearFilters()" style="padding: 0.5rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 25px; font-size: 0.85rem; cursor: pointer;">
+            Clear Filters
+        </button>
     </div>
     {% endfor %}
 </div>
+
+<!-- Pagination -->
+{% if total_pages and total_pages > 1 %}
+<div style="display: flex; justify-content: center; gap: 0.4rem; margin-top: 2.5rem;">
+    {% if current_page > 1 %}
+    <button onclick="goToPage({{ current_page - 1 }})" style="width: 38px; height: 38px; border: 1px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;">
+        <i class="fas fa-chevron-left" style="color: #666; font-size: 0.8rem;"></i>
+    </button>
+    {% endif %}
+    
+    {% for page in range(1, total_pages + 1) %}
+        {% if page == current_page %}
+        <button style="width: 38px; height: 38px; border: none; background: #667eea; color: white; border-radius: 8px;">{{ page }}</button>
+        {% elif page <= current_page + 2 and page >= current_page - 2 %}
+        <button onclick="goToPage({{ page }})" style="width: 38px; height: 38px; border: 1px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;">{{ page }}</button>
+        {% endif %}
+    {% endfor %}
+    
+    {% if current_page < total_pages %}
+    <button onclick="goToPage({{ current_page + 1 }})" style="width: 38px; height: 38px; border: 1px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer;">
+        <i class="fas fa-chevron-right" style="color: #666; font-size: 0.8rem;"></i>
+    </button>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+function clearFilters() {
+    window.location.href = "{{ url_for('student.dashboard') }}";
+}
+
+function goToPage(page) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.location.href = url.toString();
+}
+</script>
 {% endblock %}

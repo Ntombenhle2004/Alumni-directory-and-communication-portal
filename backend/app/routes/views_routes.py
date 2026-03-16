@@ -1,6 +1,7 @@
 from flask import Blueprint, redirect, render_template, current_app, session, url_for
-from ..models.user import User, AlumniProfile, StudentProfile
+from ..models.user import User, AlumniProfile, StudentProfile, MentorshipRequest
 from ..models.user import Event, EventRegistration
+
 from datetime import datetime
 import os
 
@@ -64,6 +65,7 @@ def register_page():
     return render_template("public/register.html")
 
 @views.route("/alumni/dashboard")
+@views.route("/alumni/dashboard")
 def alumni_dashboard():
     try:
         user = get_current_user()
@@ -72,48 +74,92 @@ def alumni_dashboard():
         
         print(f"Loading dashboard for user: {user.full_name}")
 
-        from ..models.user import Conversation, Message
+        from ..models.user import Conversation, Message, MentorshipRequest, AlumniProfile, StudentProfile, User
+        
+        # Get unread messages count
         unread_count = Message.query.join(Conversation).filter(
-                Conversation.alumni_id == user.id,
-                Message.is_read == False,
-                Message.sender_id != user.id
-            ).count()
+            Conversation.alumni_id == user.id,
+            Message.is_read == False,
+            Message.sender_id != user.id
+        ).count()
+        
+        # Get pending mentorship requests (FIXED: removed duplicate)
+        pending_requests = MentorshipRequest.query.filter_by(
+            alumni_id=user.id,
+            status='pending'
+        ).order_by(MentorshipRequest.request_date.desc()).all()
+        
+        # Get active mentees count
+        active_mentees_count = MentorshipRequest.query.filter_by(
+            alumni_id=user.id,
+            status='accepted'
+        ).count()
+        
+        # Get student details for each pending request
+        for request in pending_requests:
+            student = User.query.get(request.student_id)
+            if student:
+                request.student_name = student.full_name
+                # Get student course if available
+                student_profile = StudentProfile.query.filter_by(user_id=student.id).first()
+                request.student_course = student_profile.course if student_profile else None
+                request.student_id = student.id  # Make sure ID is available
         
         print(f"Unread count: {unread_count}")
+        print(f"Pending requests: {len(pending_requests)}")
         
+        # Get alumni profile
         alumni_profile = AlumniProfile.query.filter_by(user_id=user.id).first()
         print(f"Alumni profile found: {alumni_profile is not None}")
-
-        active_mentees_count = 8
-        new_mentees = 2
-        pending_requests = 4
-        profile_views = 156
-        weekly_views = 23
-        recent_activities = [
+        
+        # Calculate average rating if profile exists and has ratings
+        if alumni_profile and alumni_profile.rating_count and alumni_profile.rating_count > 0:
+            from ..models.user import Rating
+            ratings = Rating.query.filter_by(alumni_id=user.id).all()
+            avg_rating = sum(r.score for r in ratings) / len(ratings) if ratings else 0
+            alumni_profile.rating_avg = avg_rating
+        
+        # Generate recent activities from actual data
+        recent_activities = []
+        
+        # Add pending requests to recent activities
+        for req in pending_requests[:3]:  # Show only 3 most recent
+            recent_activities.append({
+                'icon': 'fa-clock',
+                'title': f'New mentorship request from {req.student_name if hasattr(req, "student_name") else "a student"}',
+                'description': req.message[:50] + '...' if req.message and len(req.message) > 50 else (req.message or 'No message provided'),
+                'time': req.request_date.strftime('%b %d, %Y') if req.request_date else 'Recently',
+                'type': 'request'
+            })
+        
+        # If no pending requests, show sample or leave empty
+        if not recent_activities:
+            recent_activities = [
                 {
-                    'icon': 'fa-user-graduate',
-                    'title': 'New mentorship request from Michael Chen',
-                    'description': 'Computer Science student • Interested in Software Engineering',
-                    'time': '2 hours ago'
-                },
-                {
-                    'icon': 'fa-comment',
-                    'title': 'New message from Emily Rodriguez',
-                    'description': 'Regarding career advice in Data Science',
-                    'time': 'Yesterday'
+                    'icon': 'fa-bell',
+                    'title': 'No recent activity',
+                    'description': 'Your dashboard is quiet. Check back later for updates.',
+                    'time': 'Now'
                 }
             ]
-            
+        
+        # Calculate profile views (you'll need to implement this properly)
+        profile_views = 156  # Placeholder - implement actual view tracking
+        weekly_views = 23    # Placeholder - implement actual weekly tracking
+        new_mentees = 2      # Placeholder - calculate new mentees this month
+        
         return render_template("alumni/dashboard.html", 
-                                user=user, 
-                                profile=alumni_profile,
-                                unread_count=unread_count,
-                                active_mentees_count=active_mentees_count,
-                                new_mentees=new_mentees,
-                                pending_requests=pending_requests,
-                                profile_views=profile_views,
-                                weekly_views=weekly_views,
-                                recent_activities=recent_activities)
+                             user=user, 
+                             profile=alumni_profile,
+                             unread_count=unread_count,
+                             active_mentees_count=active_mentees_count,
+                             new_mentees=new_mentees,
+                             pending_requests=pending_requests,
+                             pending_requests_count=len(pending_requests),
+                             profile_views=profile_views,
+                             weekly_views=weekly_views,
+                             recent_activities=recent_activities)
+    
     except Exception as e:
         print(f"ERROR in alumni_dashboard: {str(e)}")
         import traceback

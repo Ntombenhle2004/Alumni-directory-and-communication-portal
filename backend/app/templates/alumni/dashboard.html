@@ -2,7 +2,7 @@
 
 {% block alumni_content %}
 <div class="welcome-card">
-    <h1>Welcome back, {{ user.full_name }}! 👋</h1>
+    <h1>Welcome back, {{ user.full_name }}!</h1>
     <p>Here's what's happening with your mentorship activities and network.</p>
 </div>
 
@@ -21,7 +21,7 @@
     </div>
     <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         <div style="color: #666; font-size: 0.9rem;">Rating</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ profile.rating_avg|default(0) }} ⭐</div>
+        <div style="font-size: 2rem; font-weight: bold;">{{ profile.rating_avg|default(0) }} </div>
     </div>
 </div>
 

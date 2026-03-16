@@ -15,13 +15,19 @@ def get_current_user():
 
 @student_bp.route("/dashboard")
 def dashboard():
+
+    print("="*50)
+    print("STUDENT DASHBOARD ROUTE ACCESSED")
+    
     user = get_current_user()
+    print(f"User: {user}")
     if not user or user.role != 'student':
         flash('Please login as a student to access the dashboard.', 'error')
         return redirect(url_for('views.login_page'))
     
     
     student_profile = StudentProfile.query.filter_by(user_id=user.id).first()
+    print(f"Student profile: {student_profile}")
     
     
     page = request.args.get('page', 1, type=int)
@@ -230,22 +236,60 @@ def mentorship_requests():
     if not user or user.role != 'student':
         return redirect(url_for('views.login_page'))
     
+    from ..models.user import MentorshipRequest, User
     
-    pending_requests = MentorshipRequest.query.filter_by(
-        student_id=user.id,
-        status='pending'
-    ).all()
+    # Get all requests sent by this student
+    all_requests = MentorshipRequest.query.filter_by(
+        student_id=user.id
+    ).order_by(MentorshipRequest.request_date.desc()).all()
     
-   
-    rejected_requests = MentorshipRequest.query.filter_by(
-        student_id=user.id,
-        status='rejected'
-    ).all()
+    # Categorize requests by status
+    pending_requests = []
+    accepted_requests = []
+    rejected_requests = []
+    
+    for request in all_requests:
+        # Get alumni name
+        alumni = User.query.get(request.alumni_id)
+        request.alumni_name = alumni.full_name if alumni else "Unknown Alumni"
+        
+        if request.status.lower() == 'pending':
+            pending_requests.append(request)
+        elif request.status.lower() == 'accepted':
+            accepted_requests.append(request)
+        elif request.status.lower() == 'rejected':
+            rejected_requests.append(request)
     
     return render_template("student/mentorship_requests.html",
                          user=user,
                          pending_requests=pending_requests,
+                         accepted_requests=accepted_requests,
                          rejected_requests=rejected_requests)
+
+@student_bp.route("/cancel-request/<int:request_id>", methods=['POST'])
+def cancel_mentorship_request(request_id):
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    from ..models.user import MentorshipRequest
+    
+    request = MentorshipRequest.query.get_or_404(request_id)
+    
+    # Ensure this request belongs to the current user
+    if request.student_id != user.id:
+        flash('You do not have permission to cancel this request.', 'error')
+        return redirect(url_for('student.mentorship_requests'))
+    
+    # Only allow cancellation of pending requests
+    if request.status.lower() == 'pending':
+        db.session.delete(request)
+        db.session.commit()
+        flash('Mentorship request cancelled successfully.', 'success')
+    else:
+        flash('Cannot cancel a request that has already been processed.', 'error')
+    
+    return redirect(url_for('student.mentorship_requests'))
 
 
 @student_bp.route("/profile")

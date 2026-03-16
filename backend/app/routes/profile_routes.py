@@ -173,7 +173,7 @@ def public_profile(user_id):
 
 
 @profile_bp.route("/student/edit", methods=['GET'])
-def edit_profile_view():
+def edit_alumni_profile():
     """Render student edit profile page"""
     user = get_current_user()
     if not user or user.role != 'student':
@@ -181,6 +181,29 @@ def edit_profile_view():
         return redirect(url_for('views.login_page'))
     
     
+    profile_data, error = profile_service.get_profile_logic(user.id)
+    
+    if error:
+        flash(error, 'error')
+        return redirect(url_for('student.dashboard'))
+    
+    return render_template("student/edit_profile.html", 
+                         user=user, 
+                         profile_data=profile_data)
+
+@profile_bp.route("/student/edit", methods=['GET'])
+def edit_student_profile():
+    """Render student edit profile page"""
+    user = get_current_user()
+    if not user:
+        flash('Please login to edit your profile.', 'error')
+        return redirect(url_for('views.login_page'))
+    
+    if user.role != 'student':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('views.home'))
+    
+    # Get profile data using service
     profile_data, error = profile_service.get_profile_logic(user.id)
     
     if error:

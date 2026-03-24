@@ -4,27 +4,25 @@
 
 {% block extra_css %}
 <style>
-    /* Your existing CSS here */
-    .container {
+    .alumni-container {
         display: flex;
-        height: calc(100vh - 64px - 60px);
-        overflow: hidden;
-        position: relative;
+        min-height: calc(100vh - 64px - 60px);
+        background: #f5f5f5;
     }
     
-    .sidebar {
+    .alumni-sidebar {
         width: 280px;
         background: white;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         padding: 2rem 0;
-        height: 100%;
+        height: calc(100vh - 64px);
+        position: sticky;
+        top: 64px;
         overflow-y: auto;
         flex-shrink: 0;
-        position: sticky;
-        top: 0;
     }
     
-    .sidebar a {
+    .alumni-sidebar a {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -35,20 +33,20 @@
         border-left: 3px solid transparent;
     }
     
-    .sidebar a:hover {
+    .alumni-sidebar a:hover {
         background: #f8f9fa;
         color: #2c3e50;
         border-left-color: #667eea;
     }
     
-    .sidebar a.active {
+    .alumni-sidebar a.active {
         background: #e8f0fe;
         color: #2c3e50;
         border-left-color: #667eea;
         font-weight: 600;
     }
     
-    .sidebar a i {
+    .alumni-sidebar a i {
         width: 20px;
         color: #667eea;
     }
@@ -62,92 +60,141 @@
         margin-left: auto;
     }
     
-    .main-content {
+    .alumni-main-content {
         flex: 1;
         padding: 2rem;
-        background: #f5f5f5;
         overflow-y: auto;
-        height: 100%;
+        height: calc(100vh - 64px - 60px);
     }
     
     .welcome-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 2rem;
-        border-radius: 10px;
+        padding: 1.5rem 2rem;
+        border-radius: 12px;
         margin-bottom: 2rem;
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
     
+    .welcome-card h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-card p {
+        font-size: 1rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+    
     @media (max-width: 768px) {
-        .container {
+        .alumni-container {
             flex-direction: column;
-            height: auto;
-            overflow: auto;
         }
         
-        .sidebar {
+        .alumni-sidebar {
             width: 100%;
             height: auto;
             position: static;
         }
         
-        .main-content {
+        .alumni-main-content {
             height: auto;
-            overflow: visible;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Sidebar - Only include routes that exist -->
-    <div class="sidebar">
-        <!-- Dashboard - EXISTS -->
+<div class="alumni-container">
+    <!-- Sidebar -->
+    <div class="alumni-sidebar">
         <a href="{{ url_for('views.alumni_dashboard') }}" class="{% if request.endpoint == 'views.alumni_dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i> Dashboard
         </a>
-        
-        <!-- My Profile - EXISTS (from profile_routes) -->
         <a href="{{ url_for('profile_module.alumni_profile_view') }}" class="{% if request.endpoint == 'profile_module.alumni_profile_view' %}active{% endif %}">
-            <i class="fas fa-user"></i> My Profile
+            <i class="fas fa-user"></i> Profile
         </a>
-        
-        <!-- Mentorship - EXISTS -->
+
+        <a href="{{ url_for('views.alumni_connections') }}" class="{% if request.endpoint == 'views.alumni_connections' %}active{% endif %}">
+            <i class="fas fa-users"></i> My Network
+        </a>
+        {% if url_for('notifications.notifications_page', _external=False) %}
+        <a href="/notifications/" class="{% if request.path == '/notifications/' %}active{% endif %}">
+            <i class="fas fa-bell"></i> Notifications
+            {% if unread_notifications_count is defined and unread_notifications_count > 0 %}
+                <span class="badge">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+        {% else %}
+        <!-- Fallback if route doesn't exist -->
+        <a href="#" class="disabled" style="opacity: 0.5; pointer-events: none;">
+            <i class="fas fa-bell"></i> Notifications (Coming Soon)
+        </a>
+        {% endif %}
         <a href="{{ url_for('views.alumni_mentorship') }}" class="{% if request.endpoint == 'views.alumni_mentorship' %}active{% endif %}">
             <i class="fas fa-handshake"></i> Mentorship
         </a>
-        
-        <!-- Messages - EXISTS -->
         <a href="{{ url_for('views.alumni_messages') }}" class="{% if request.endpoint == 'views.alumni_messages' %}active{% endif %}">
             <i class="fas fa-envelope"></i> Messages
             {% if unread_count and unread_count > 0 %}
                 <span class="badge">{{ unread_count }}</span>
             {% endif %}
         </a>
-        
-        <!-- Browse Students - You'll need to create this route -->
-        <!-- Commented out until route exists
-        <a href="{{ url_for('views.browse_students') }}" class="{% if request.endpoint == 'views.browse_students' %}active{% endif %}">
-            <i class="fas fa-users"></i> Browse Students
+
+        <!-- Network Feed - NEW BUTTON -->
+        <a href="{{ url_for('network.feed') }}" class="{% if request.endpoint == 'network.feed' %}active{% endif %}">
+            <i class="fas fa-newspaper"></i> Feed
         </a>
-        -->
         
-        <!-- Events - EXISTS -->
+        <!-- Connections - NEW BUTTON -->
+        <a href="{{ url_for('network.connections') }}" class="{% if request.endpoint == 'network.connections' %}active{% endif %}">
+            <i class="fas fa-users"></i> Connections
+            {% if connection_requests_count and connection_requests_count > 0 %}
+                <span class="badge">{{ connection_requests_count }}</span>
+            {% endif %}
+        </a>
+        
+        <!-- Alumni Directory - NEW BUTTON -->
+        <a href="{{ url_for('network.alumni_directory') }}" class="{% if request.endpoint == 'network.alumni_directory' %}active{% endif %}">
+            <i class="fas fa-globe"></i> Alumni Directory
+        </a>
         <a href="{{ url_for('events.alumni_events') }}" class="{% if request.endpoint == 'events.alumni_events' %}active{% endif %}">
             <i class="fas fa-calendar"></i> Events
         </a>
-        
-        <!-- Settings - Points to profile for now -->
-        <a href="{{ url_for('profile_module.alumni_profile_view') }}" class="{% if request.endpoint == 'profile_module.alumni_profile_view' %}active{% endif %}">
+        <a href="{{ url_for('profile_module.alumni_settings') }}" class="{% if request.endpoint == 'profile_module.alumni_profile_view' %}active{% endif %}">
             <i class="fas fa-cog"></i> Settings
         </a>
     </div>
 
-    <!-- Main Content - Scrollable Area -->
-    <div class="main-content">
+    <!-- Main Content Area -->
+    <div class="alumni-main-content">
         {% block alumni_content %}{% endblock %}
     </div>
 </div>
+
+<script>
+    // Check for new notifications every 30 seconds
+    function checkNotifications() {
+        fetch('/notifications/api/unread-count')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.querySelector('.sidebar a[href*="notifications"] .badge');
+                if (badge) {
+                    if (data.unread_count > 0) {
+                        badge.textContent = data.unread_count;
+                        badge.style.display = 'inline';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            });
+    }
+    
+    // Check every 30 seconds
+    setInterval(checkNotifications, 30000);
+    
+    // Also check when page loads
+    document.addEventListener('DOMContentLoaded', checkNotifications);
+</script>
 {% endblock %}

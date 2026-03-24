@@ -1,0 +1,399 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}Notifications - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .notifications-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .notifications-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .notifications-header h1 {
+        font-size: 2rem;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .mark-all-read {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    
+    .mark-all-read:hover {
+        background: #764ba2;
+    }
+    
+    .notifications-list {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .notification-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+        cursor: pointer;
+    }
+    
+    .notification-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .notification-item.unread {
+        background: #e8f0fe;
+        border-left: 4px solid #667eea;
+    }
+    
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .icon-mentorship_request { background: #f39c12; }
+    .icon-mentorship_response { background: #27ae60; }
+    .icon-payment_success { background: #9b59b6; }
+    .icon-connection_request { background: #3498db; }
+    .icon-connection_response { background: #27ae60; }
+    .icon-message { background: #e74c3c; }
+    .icon-event_reminder { background: #1abc9c; }
+    
+    .notification-content {
+        flex: 1;
+    }
+    
+    .notification-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .notification-message {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .notification-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: #999;
+    }
+    
+    .notification-meta i {
+        margin-right: 0.25rem;
+    }
+    
+    .notification-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        opacity: 1;
+    }
+    
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .btn-accept {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-accept:hover {
+        background: #219a52;
+        transform: translateY(-2px);
+    }
+    
+    .btn-reject {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-reject:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+    }
+    
+    .btn-view {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-view:hover {
+        background: #764ba2;
+    }
+    
+    .btn-dismiss {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .btn-dismiss:hover {
+        background: #7f8c8d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-tab {
+        padding: 0.5rem 1.5rem;
+        border: 1px solid #e0e0e0;
+        background: white;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    
+    .filter-tab:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    
+    .filter-tab.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block student_content %}
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h1><i class="fas fa-bell" style="color: #667eea;"></i> Notifications</h1>
+        <button class="mark-all-read" onclick="markAllRead()">Mark All as Read</button>
+    </div>
+    
+    <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterNotifications('all', this)">All</button>
+        <button class="filter-tab" onclick="filterNotifications('unread', this)">Unread</button>
+        <button class="filter-tab" onclick="filterNotifications('mentorship_request', this)">Mentorship Requests</button>
+        <button class="filter-tab" onclick="filterNotifications('payment', this)">Payment</button>
+    </div>
+    
+    <div class="notifications-list" id="notificationsList">
+        {% if notifications and notifications|length > 0 %}
+            {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                 data-id="{{ notification.id }}"
+                 data-type="{{ notification.notification_type }}"
+                 data-read="{{ notification.is_read|lower }}">
+                
+                <div class="notification-icon icon-{{ notification.notification_type }}">
+                    <i class="fas 
+                        {% if notification.notification_type == 'mentorship_request' %}fa-graduation-cap
+                        {% elif notification.notification_type == 'mentorship_response' %}fa-check-circle
+                        {% elif 'payment' in notification.notification_type %}fa-credit-card
+                        {% elif notification.notification_type == 'connection_request' %}fa-user-plus
+                        {% elif notification.notification_type == 'connection_response' %}fa-handshake
+                        {% elif notification.notification_type == 'message' %}fa-envelope
+                        {% else %}fa-bell{% endif %}">
+                    </i>
+                </div>
+                
+                <div class="notification-content">
+                    <div class="notification-title">{{ notification.title }}</div>
+                    <div class="notification-message">{{ notification.message }}</div>
+                    
+                    <div class="notification-meta">
+                        <span><i class="far fa-clock"></i> {{ notification.time_ago }}</span>
+                        {% if notification.sender %}
+                        <span><i class="far fa-user"></i> From: {{ notification.sender.full_name }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Action buttons based on notification type -->
+                    <!-- Action buttons based on notification type -->
+<div class="notification-actions">
+    {% if notification.notification_type == 'mentorship_response' %}
+        {% if 'accepted' in notification.title|lower %}
+            <a href="{{ url_for('student.view_alumni', alumni_id=notification.reference_id) }}" class="action-btn btn-view">
+                <i class="fas fa-eye"></i> View Mentor
+            </a>
+        {% endif %}
+        <button class="action-btn btn-dismiss" onclick="markAsRead({{ notification.id }})">
+            <i class="fas fa-check"></i> Dismiss
+        </button>
+        
+    {% elif notification.notification_type == 'payment_success' %}
+        <a href="{{ url_for('student.view_alumni', alumni_id=notification.reference_id) }}" class="action-btn btn-view">
+            <i class="fas fa-chalkboard-user"></i> View Mentor
+        </a>
+        <button class="action-btn btn-dismiss" onclick="markAsRead({{ notification.id }})">
+            <i class="fas fa-check"></i> Dismiss
+        </button>
+        
+    {% elif notification.notification_type == 'mentorship_request' %}
+        <a href="{{ url_for('student.dashboard') }}" class="action-btn btn-view">
+            <i class="fas fa-eye"></i> View Status
+        </a>
+        <button class="action-btn btn-dismiss" onclick="markAsRead({{ notification.id }})">
+            <i class="fas fa-check"></i> Mark Read
+        </button>
+        
+    {% else %}
+        {% if not notification.is_read %}
+        <button class="action-btn btn-dismiss" onclick="markAsRead({{ notification.id }})">
+            <i class="fas fa-check"></i> Mark Read
+        </button>
+        {% endif %}
+    {% endif %}
+</div>
+
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h3>No notifications</h3>
+                <p>When you receive mentorship updates or payment confirmations, they'll appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function markAsRead(notificationId) {
+        fetch(`/notifications/mark-read/${notificationId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const item = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+                item.classList.remove('unread');
+                item.dataset.read = 'true';
+                
+                const actions = item.querySelector('.notification-actions');
+                if (actions) {
+                    actions.innerHTML = '<span style="color: #999; font-size: 0.8rem;">Read</span>';
+                }
+                
+                updateBadgeCount();
+            }
+        });
+    }
+    
+    function markAllRead() {
+        fetch('/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.classList.remove('unread');
+                    item.dataset.read = 'true';
+                    
+                    const actions = item.querySelector('.notification-actions');
+                    if (actions && !actions.querySelector('.btn-accept')) {
+                        actions.innerHTML = '<span style="color: #999; font-size: 0.8rem;">Read</span>';
+                    }
+                });
+                updateBadgeCount();
+            }
+        });
+    }
+    
+    function filterNotifications(type, btn) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        btn.classList.add('active');
+        
+        // Filter notifications
+        const items = document.querySelectorAll('.notification-item');
+        items.forEach(item => {
+            if (type === 'all') {
+                item.style.display = 'flex';
+            } else if (type === 'unread') {
+                item.style.display = item.dataset.read === 'false' ? 'flex' : 'none';
+            } else if (type === 'payment') {
+                item.style.display = item.dataset.type.includes('payment') ? 'flex' : 'none';
+            } else {
+                item.style.display = item.dataset.type === type ? 'flex' : 'none';
+            }
+        });
+    }
+    
+    function updateBadgeCount() {
+        const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+        
+        // Update sidebar badge
+        const badge = document.querySelector('.student-sidebar a[href*="notifications"] .badge');
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+</script>
+{% endblock %}

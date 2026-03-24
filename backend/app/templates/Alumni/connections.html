@@ -1,0 +1,185 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}My Network - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .connections-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .connections-header {
+        margin-bottom: 2rem;
+    }
+    
+    .connections-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .connections-header p {
+        color: #666;
+    }
+    
+    .connections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .connection-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: all 0.2s;
+        text-align: center;
+    }
+    
+    .connection-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+    
+    .connection-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin: 0 auto 1rem;
+    }
+    
+    .connection-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .connection-title {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    
+    .connection-role {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        margin-bottom: 1rem;
+    }
+    
+    .role-alumni {
+        background: #e8f0fe;
+        color: #667eea;
+    }
+    
+    .role-student {
+        background: #d4edda;
+        color: #27ae60;
+    }
+    
+    .btn-message {
+        width: 100%;
+        padding: 0.6rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-message:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        color: #666;
+        grid-column: 1/-1;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block alumni_content %}
+<div class="connections-container">
+    <div class="connections-header">
+        <h1><i class="fas fa-users" style="color: #667eea;"></i> My Network</h1>
+        <p>Connect and chat with other alumni</p>
+    </div>
+    
+    <div class="connections-grid">
+        {% if connections and connections|length > 0 %}
+            {% for connection in connections %}
+            <div class="connection-card">
+                <div class="connection-avatar">{{ connection.avatar }}</div>
+                <div class="connection-name">{{ connection.name }}</div>
+                <div class="connection-title">
+                    {% if connection.job_title %}
+                        {{ connection.job_title }}
+                        {% if connection.company %} at {{ connection.company }}{% endif %}
+                    {% else %}
+                        {% if connection.role == 'alumni' %}Alumni Member{% else %}Student{% endif %}
+                    {% endif %}
+                </div>
+                <div class="connection-role role-alumni">
+                    {% if connection.role == 'alumni' %}Alumni{% else %}Student{% endif %}
+                </div>
+                <button class="btn-message" onclick="startChat({{ connection.id }})">
+                    <i class="fas fa-comment"></i> Send Message
+                </button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-user-friends"></i>
+                <h3>No Connections Yet</h3>
+                <p>Connect with other alumni to start messaging!</p>
+                <a href="{{ url_for('network.alumni_directory') }}" class="btn-primary">
+                    <i class="fas fa-search"></i> Find Alumni to Connect With
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function startChat(userId) {
+    window.location.href = `/alumni/start-chat/${userId}`;
+}
+</script>
+{% endblock %}

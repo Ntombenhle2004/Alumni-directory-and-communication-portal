@@ -1,0 +1,445 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Network Feed - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .feed-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .create-post-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .post-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .post-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .post-author {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .post-time {
+        font-size: 0.8rem;
+        color: #999;
+    }
+    
+    .post-content {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+        color: #2c3e50;
+    }
+    
+    .post-media {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .post-media img {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+    }
+    
+    .post-stats {
+        display: flex;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .post-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .action-btn {
+        flex: 1;
+        padding: 0.5rem;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .action-btn:hover {
+        background: #f8f9fa;
+    }
+    
+    .comments-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .comment {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        background: #667eea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .comment-content {
+        flex: 1;
+        background: #f8f9fa;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+    }
+    
+    .comment-name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    
+    .comment-text {
+        font-size: 0.85rem;
+        color: #666;
+        word-wrap: break-word;
+    }
+    
+    .comment-time {
+        font-size: 0.7rem;
+        color: #999;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+    
+    .comment-form {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .comment-form input {
+        flex: 1;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block alumni_content %}
+<div class="feed-container">
+    <!-- Create Post Card -->
+    <div class="create-post-card">
+        <form method="POST" action="{{ url_for('network.create_post') }}" enctype="multipart/form-data">
+            <textarea name="content" class="form-control" rows="3" placeholder="Share an update, article, or achievement..." required></textarea>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                <select name="visibility" class="form-control" style="width: auto;">
+                    <option value="public">🌍 Public</option>
+                    <option value="connections">👥 Connections Only</option>
+                </select>
+                <input type="file" name="media" accept="image/*,video/*" style="flex: 1;">
+                <button type="submit" class="btn-primary" style="margin-left: auto;">Post</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Feed Posts -->
+    {% if posts and posts|length > 0 %}
+        {% for post in posts %}
+        <div class="post-card" data-post-id="{{ post.id }}">
+            <div class="post-header">
+                <div class="post-avatar">{{ post.author.full_name[:2].upper() if post.author else 'U' }}</div>
+                <div>
+                    <div class="post-author">{{ post.author.full_name if post.author else 'Unknown' }}</div>
+                    <div class="post-time">{{ post.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                </div>
+            </div>
+            
+            <div class="post-content">{{ post.content }}</div>
+            
+            {% if post.media_url %}
+            <div class="post-media">
+                {% if post.media_type == 'image' %}
+                    <img src="{{ post.media_url }}" alt="Post image">
+                {% elif post.media_type == 'video' %}
+                    <video controls style="width: 100%;">
+                        <source src="{{ post.media_url }}" type="video/mp4">
+                    </video>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="post-stats">
+                <span><i class="fas fa-heart" style="color: #e74c3c;"></i> <span class="like-count">{{ post.likes_count }}</span> likes</span>
+                <span><i class="fas fa-comment"></i> <span class="comment-count">{{ post.comments_count }}</span> comments</span>
+            </div>
+            
+            <div class="post-actions">
+                <button class="action-btn like-btn" onclick="likePost({{ post.id }}, this)">
+                    <i class="far fa-heart"></i> Like
+                </button>
+                <button class="action-btn comment-toggle-btn" onclick="toggleComments({{ post.id }})">
+                    <i class="far fa-comment"></i> Comment
+                </button>
+            </div>
+            
+            <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                <div class="comments-list" id="comments-list-{{ post.id }}">
+                    {% for comment in post.comments %}
+                    <div class="comment" data-comment-id="{{ comment.id }}">
+                        <div class="comment-avatar">{{ comment.user.full_name[:2].upper() if comment.user else 'U' }}</div>
+                        <div class="comment-content">
+                            <div class="comment-name">{{ comment.user.full_name if comment.user else 'Unknown' }}</div>
+                            <div class="comment-text">{{ comment.content }}</div>
+                            <div class="comment-time">{{ comment.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <form class="comment-form" onsubmit="addComment({{ post.id }}, this); return false;">
+                    <input type="text" name="content" class="form-control" placeholder="Write a comment..." required>
+                    <button type="submit" class="btn-primary">Post</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-newspaper"></i>
+            <h3>No Posts Yet</h3>
+            <p>Connect with other alumni to see their updates in your feed!</p>
+            <a href="{{ url_for('network.alumni_directory') }}" class="btn-primary" style="display: inline-block; margin-top: 1rem;">
+                Find Alumni to Connect With
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function likePost(postId, btn) {
+    fetch(`/network/post/${postId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const postCard = btn.closest('.post-card');
+        const likeCountSpan = postCard.querySelector('.like-count');
+        likeCountSpan.textContent = data.likes_count;
+        
+        const icon = btn.querySelector('i');
+        if (data.liked) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            icon.style.color = '#e74c3c';
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            icon.style.color = '';
+        }
+    });
+}
+
+function toggleComments(postId) {
+    const commentsDiv = document.getElementById(`comments-${postId}`);
+    if (commentsDiv.style.display === 'none') {
+        commentsDiv.style.display = 'block';
+        // Load comments if needed
+    } else {
+        commentsDiv.style.display = 'none';
+    }
+}
+
+function addComment(postId, form) {
+    const contentInput = form.querySelector('input[name="content"]');
+    const content = contentInput.value.trim();
+    
+    if (!content) return;
+    
+    // Disable submit button and show loading
+    const submitBtn = form.querySelector('button');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Posting...';
+    
+    fetch(`/network/post/${postId}/comment`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `content=${encodeURIComponent(content)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Clear input
+            contentInput.value = '';
+            
+            // Get the comments list container
+            const commentsList = document.getElementById(`comments-list-${postId}`);
+            
+            // Create new comment element
+            const newComment = document.createElement('div');
+            newComment.className = 'comment';
+            newComment.setAttribute('data-comment-id', data.comment.id);
+            newComment.innerHTML = `
+                <div class="comment-avatar">{{ user.full_name[:2].upper() }}</div>
+                <div class="comment-content">
+                    <div class="comment-name">{{ user.full_name }}</div>
+                    <div class="comment-text">${escapeHtml(content)}</div>
+                    <div class="comment-time">Just now</div>
+                </div>
+            `;
+            
+            // Add animation
+            newComment.style.animation = 'fadeIn 0.3s ease';
+            
+            // Add to the comments list (append at the end)
+            commentsList.appendChild(newComment);
+            
+            // Update comment count
+            const commentCountSpan = form.closest('.post-card').querySelector('.comment-count');
+            const currentCount = parseInt(commentCountSpan.textContent);
+            commentCountSpan.textContent = currentCount + 1;
+            
+            // Scroll to the new comment
+            newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            alert('Error posting comment: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error posting comment. Please try again.');
+    })
+    .finally(() => {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

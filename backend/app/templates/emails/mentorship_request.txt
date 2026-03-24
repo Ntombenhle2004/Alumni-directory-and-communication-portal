@@ -1,0 +1,19 @@
+New Mentorship Request from {{ student.full_name }}
+
+Hello {{ alumni.full_name }},
+
+{{ student.full_name }} has sent you a mentorship request.
+
+Message: "{{ request.message or 'No message provided' }}"
+
+Student Details:
+- Email: {{ student.email }}
+- Course: {{ student.course or 'Not specified' }}
+- Graduation Year: {{ student.graduation_year or 'Not specified' }}
+
+Please log in to review and respond to this request.
+
+View request at: {{ app_url }}/alumni/mentorship
+
+---
+Alumni Portal | Connecting Students with Mentors

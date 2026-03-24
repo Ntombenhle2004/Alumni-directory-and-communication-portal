@@ -1,0 +1,471 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}Resources from {{ mentor.full_name }}{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .resources-container {
+        width: 100%;
+    }
+    
+    .resources-header {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .mentor-avatar-large {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .mentor-info h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    
+    .mentor-info p {
+        color: #666;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-badge {
+        display: inline-block;
+        padding: 0.25rem 1rem;
+        background: #e8f0fe;
+        color: #667eea;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.3rem;
+        color: #2c3e50;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-header h2 i {
+        color: #667eea;
+    }
+    
+    .section-header .badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+    
+    .resource-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .resource-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #f0f0f0;
+        transition: all 0.2s;
+    }
+    
+    .resource-card:hover {
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+    
+    .resource-icon {
+        height: 100px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+    }
+    
+    .resource-content {
+        padding: 1.5rem;
+    }
+    
+    .resource-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .resource-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    
+    .resource-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #999;
+        margin-bottom: 1rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .resource-type {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .type-document { background: #e8f0fe; color: #667eea; }
+    .type-video { background: #fee8e6; color: #e74c3c; }
+    .type-link { background: #e8f5e9; color: #27ae60; }
+    .type-assignment { background: #fff3e0; color: #f39c12; }
+    
+    .btn-open {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #667eea;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        text-align: center;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-open:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .session-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        border: 1px solid #f0f0f0;
+        transition: all 0.2s;
+    }
+    
+    .session-card:hover {
+        border-color: #667eea;
+        transform: translateX(3px);
+    }
+    
+    .session-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .session-date {
+        font-size: 0.85rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .session-date i {
+        margin-right: 0.25rem;
+    }
+    
+    .session-description {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    
+    .session-resources {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .session-resources strong {
+        display: block;
+        margin-bottom: 0.75rem;
+        color: #2c3e50;
+    }
+    
+    .session-resource-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .session-resource-item:last-child {
+        border-bottom: none;
+    }
+    
+    .resource-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .resource-info i {
+        color: #667eea;
+        width: 20px;
+        font-size: 1rem;
+    }
+    
+    .resource-info span {
+        font-size: 0.85rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .resource-action {
+        flex-shrink: 0;
+    }
+    
+    .btn-sm {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary:hover {
+        background: #764ba2;
+    }
+    
+    .btn-back {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #f0f0f0;
+        color: #2c3e50;
+        border-radius: 6px;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-back:hover {
+        background: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block student_content %}
+<a href="{{ url_for('student.my_mentors') }}" class="btn-back">
+    <i class="fas fa-arrow-left"></i> Back to My Mentors
+</a>
+
+<div class="resources-container">
+    <!-- Mentor Header -->
+    <div class="resources-header">
+        <div class="mentor-avatar-large">
+            {{ mentor.full_name[:2].upper() }}
+        </div>
+        <div class="mentor-info">
+            <h1>{{ mentor.full_name }}</h1>
+            <p>{{ profile.job_title or 'Mentor' }} at {{ profile.company or 'Company' }}</p>
+            <p><i class="fas fa-calendar-alt"></i> Mentoring since {{ mentorship.request_date.strftime('%b %Y') if mentorship else 'Recently' }}</p>
+            <span class="stats-badge">
+                <i class="fas fa-book-open"></i> {{ resources_count|default(0) }} Resources
+            </span>
+            <span class="stats-badge">
+                <i class="fas fa-calendar"></i> {{ sessions_count|default(0) }} Sessions
+            </span>
+        </div>
+    </div>
+
+    <!-- Sessions with Resources -->
+    {% if sessions_with_resources and sessions_with_resources|length > 0 %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2><i class="fas fa-calendar-alt"></i> Session Materials</h2>
+            <span class="badge">{{ sessions_with_resources|length }}</span>
+        </div>
+
+        {% for session in sessions_with_resources %}
+        <div class="session-card">
+            <div class="session-title">{{ session.title }}</div>
+            <div class="session-date">
+                <i class="far fa-calendar"></i> {{ session.session_date.strftime('%A, %B %d, %Y at %I:%M %p') }}
+            </div>
+            {% if session.description %}
+            <div class="session-description">{{ session.description }}</div>
+            {% endif %}
+            
+            {% if session.resources and session.resources|length > 0 %}
+            <div class="session-resources">
+                <strong><i class="fas fa-paperclip"></i> Materials ({{ session.resources|length }})</strong>
+                {% for resource in session.resources %}
+                <div class="session-resource-item">
+                    <div class="resource-info">
+                        <i class="fas 
+                            {% if resource.resource_type == 'document' %}fa-file-alt
+                            {% elif resource.resource_type == 'video' %}fa-video
+                            {% elif resource.resource_type == 'link' %}fa-link
+                            {% else %}fa-tasks{% endif %}">
+                        </i>
+                        <span>{{ resource.title }}</span>
+                    </div>
+                    <div class="resource-action">
+                        {% if resource.file_path %}
+                            <a href="{{ resource.file_path }}" class="btn-open btn-sm" download>
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        {% elif resource.external_link %}
+                            <a href="{{ resource.external_link }}" class="btn-open btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Open
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- General Resources -->
+    {% if general_resources and general_resources|length > 0 %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2><i class="fas fa-book-open"></i> Learning Materials</h2>
+            <span class="badge">{{ general_resources|length }}</span>
+        </div>
+
+        <div class="resource-grid">
+            {% for resource in general_resources %}
+            <div class="resource-card">
+                <div class="resource-icon">
+                    {% if resource.resource_type == 'document' %}
+                        <i class="fas fa-file-alt"></i>
+                    {% elif resource.resource_type == 'video' %}
+                        <i class="fas fa-video"></i>
+                    {% elif resource.resource_type == 'link' %}
+                        <i class="fas fa-link"></i>
+                    {% else %}
+                        <i class="fas fa-tasks"></i>
+                    {% endif %}
+                </div>
+                <div class="resource-content">
+                    <h3 class="resource-title">{{ resource.title }}</h3>
+                    <p class="resource-description">{{ resource.description or 'No description provided.' }}</p>
+                    <div class="resource-meta">
+                        <span class="resource-type type-{{ resource.resource_type }}">
+                            <i class="fas 
+                                {% if resource.resource_type == 'document' %}fa-file
+                                {% elif resource.resource_type == 'video' %}fa-play
+                                {% elif resource.resource_type == 'link' %}fa-link
+                                {% else %}fa-check{% endif %}">
+                            </i>
+                            {{ resource.resource_type|title }}
+                        </span>
+                        <span><i class="far fa-clock"></i> {{ resource.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    {% if resource.file_path %}
+                        <a href="{{ resource.file_path }}" class="btn-open" download>
+                            <i class="fas fa-download"></i> Download Resource
+                        </a>
+                    {% elif resource.external_link %}
+                        <a href="{{ resource.external_link }}" class="btn-open" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Open Resource
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not sessions_with_resources and not general_resources %}
+    <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h3>No Resources Yet</h3>
+        <p>{{ mentor.full_name }} hasn't shared any resources yet. Check back after your first session!</p>
+        <a href="{{ url_for('student.start_chat', alumni_id=mentor.id) }}" class="btn-primary">
+            <i class="fas fa-comment"></i> Send a Message
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

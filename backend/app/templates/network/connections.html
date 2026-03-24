@@ -1,0 +1,395 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Connections - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .connections-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .section-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-header h2 {
+        font-size: 1.3rem;
+        margin: 0;
+    }
+    
+    .badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+    
+    .connection-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .connection-item:last-child {
+        border-bottom: none;
+    }
+    
+    .connection-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .connection-info {
+        flex: 1;
+    }
+    
+    .connection-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    
+    .connection-title {
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .btn-accept, .btn-reject, .btn-message, .btn-pending {
+        padding: 0.4rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-accept {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-accept:hover {
+        background: #219a52;
+        transform: translateY(-2px);
+    }
+    
+    .btn-reject {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-reject:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+    }
+    
+    .btn-message {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-message:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .btn-pending {
+        background: #f39c12;
+        color: white;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-connected {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        color: #ccc;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block alumni_content %}
+<div class="connections-container">
+    <h1 style="margin-bottom: 1.5rem;">My Network</h1>
+    
+    <!-- Pending Requests Received -->
+    {% if received_requests and received_requests|length > 0 %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Connection Requests</h2>
+            <span class="badge">{{ received_requests|length }}</span>
+        </div>
+        {% for req in received_requests %}
+        <div class="connection-item">
+            <div class="connection-avatar">{{ req.user.full_name[:2].upper() }}</div>
+            <div class="connection-info">
+                <div class="connection-name">{{ req.user.full_name }}</div>
+                <div class="connection-title">
+                    {% if req.user.alumni_profile %}
+                        {{ req.user.alumni_profile.job_title or 'Alumni' }}
+                        {% if req.user.alumni_profile.company %} at {{ req.user.alumni_profile.company }}{% endif %}
+                    {% else %}
+                        Alumni
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <button class="btn-accept" onclick="acceptConnection({{ req.id }})">Accept</button>
+                <button class="btn-reject" onclick="rejectConnection({{ req.id }})">Reject</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Sent Requests (Pending) -->
+    {% if sent_requests and sent_requests|length > 0 %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Sent Requests</h2>
+            <span class="badge">{{ sent_requests|length }}</span>
+        </div>
+        {% for req in sent_requests %}
+        <div class="connection-item">
+            <div class="connection-avatar">{{ req.connected_user.full_name[:2].upper() }}</div>
+            <div class="connection-info">
+                <div class="connection-name">{{ req.connected_user.full_name }}</div>
+                <div class="connection-title">
+                    {% if req.connected_user.alumni_profile %}
+                        {{ req.connected_user.alumni_profile.job_title or 'Alumni' }}
+                        {% if req.connected_user.alumni_profile.company %} at {{ req.connected_user.alumni_profile.company }}{% endif %}
+                    {% else %}
+                        Alumni
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <span class="status-badge status-pending">
+                    <i class="fas fa-clock"></i> Pending
+                </span>
+                <button class="btn-reject" onclick="cancelRequest({{ req.id }})" style="margin-left: 0.5rem;">Cancel</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Accepted Connections -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Your Connections</h2>
+            <span class="badge">{{ accepted_connections|length }}</span>
+        </div>
+        {% if accepted_connections and accepted_connections|length > 0 %}
+            {% for conn in accepted_connections %}
+            <div class="connection-item">
+                <div class="connection-avatar">
+                    {% if conn.user_id == user.id %}
+                        {{ conn.connected_user.full_name[:2].upper() }}
+                    {% else %}
+                        {{ conn.user.full_name[:2].upper() }}
+                    {% endif %}
+                </div>
+                <div class="connection-info">
+                    <div class="connection-name">
+                        {% if conn.user_id == user.id %}
+                            {{ conn.connected_user.full_name }}
+                        {% else %}
+                            {{ conn.user.full_name }}
+                        {% endif %}
+                    </div>
+                    <div class="connection-title">
+                        {% if conn.user_id == user.id %}
+                            {% if conn.connected_user.alumni_profile %}
+                                {{ conn.connected_user.alumni_profile.job_title or 'Alumni' }}
+                                {% if conn.connected_user.alumni_profile.company %} at {{ conn.connected_user.alumni_profile.company }}{% endif %}
+                            {% else %}
+                                Alumni
+                            {% endif %}
+                        {% else %}
+                            {% if conn.user.alumni_profile %}
+                                {{ conn.user.alumni_profile.job_title or 'Alumni' }}
+                                {% if conn.user.alumni_profile.company %} at {{ conn.user.alumni_profile.company }}{% endif %}
+                            {% else %}
+                                Alumni
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <a href="#" class="btn-message" onclick="startChat({{ conn.connected_user_id if conn.user_id == user.id else conn.user_id }})">Message</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-user-friends"></i>
+                <p>You don't have any connections yet.</p>
+                <a href="{{ url_for('network.alumni_directory') }}" class="btn-primary">Find Alumni to Connect With</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Suggested Connections -->
+    {% if suggested and suggested|length > 0 %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Suggested Alumni</h2>
+            <span class="badge">{{ suggested|length }}</span>
+        </div>
+        {% for alumni in suggested %}
+        <div class="connection-item">
+            <div class="connection-avatar">{{ alumni.full_name[:2].upper() }}</div>
+            <div class="connection-info">
+                <div class="connection-name">{{ alumni.full_name }}</div>
+                <div class="connection-title">
+                    {% if alumni.alumni_profile %}
+                        {{ alumni.alumni_profile.job_title or 'Alumni' }}
+                        {% if alumni.alumni_profile.company %} at {{ alumni.alumni_profile.company }}{% endif %}
+                    {% else %}
+                        Alumni
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <button class="btn-accept" onclick="sendConnectionRequest({{ alumni.id }})">Connect</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function acceptConnection(connectionId) {
+    fetch(`/network/accept/${connectionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+function rejectConnection(connectionId) {
+    if (!confirm('Reject this connection request?')) return;
+    
+    fetch(`/network/reject/${connectionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+function cancelRequest(connectionId) {
+    if (!confirm('Cancel this connection request?')) return;
+    
+    fetch(`/network/reject/${connectionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+function sendConnectionRequest(userId) {
+    fetch(`/network/connect/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Connection request sent!');
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+function startChat(userId) {
+    window.location.href = `/alumni/start-chat/${userId}`;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,481 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Edit Event - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .form-title {
+        font-size: 2rem;
+        color: #2c3e50;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-section h3 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-section h3 i {
+        color: #667eea;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .mode-selector {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .mode-option {
+        flex: 1;
+        cursor: pointer;
+    }
+    
+    .mode-option input[type="radio"] {
+        display: none;
+    }
+    
+    .mode-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    
+    .mode-option input[type="radio"]:checked + .mode-card {
+        border-color: #667eea;
+        background: #f0f3ff;
+    }
+    
+    .mode-card i {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .mode-card h4 {
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    
+    .mode-card p {
+        color: #666;
+        font-size: 0.85rem;
+    }
+    
+    .online-fields, .venue-fields {
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #e9ecef;
+        color: #2c3e50;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-secondary:hover {
+        background: #dee2e6;
+    }
+    
+    .helper-text {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-back {
+        display: inline-block;
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        background: #f0f0f0;
+        color: #2c3e50;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+    
+    .btn-back:hover {
+        background: #e0e0e0;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #e74c3c;
+    }
+</style>
+{% endblock %}
+
+{% block alumni_content %}
+<a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn-back">
+    <i class="fas fa-arrow-left"></i> Back to Event
+</a>
+
+<div class="form-container">
+    <h1 class="form-title">
+        <i class="fas fa-edit" style="color: #667eea;"></i>
+        Edit Event
+    </h1>
+    
+    <form method="POST" id="eventForm">
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+            
+            <div class="form-group">
+                <label for="title" class="required-field">Event Title</label>
+                <input type="text" id="title" name="title" class="form-control" required value="{{ event.title }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="description" class="required-field">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="5" required>{{ event.description }}</textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="event_type" class="required-field">Event Type</label>
+                    <select id="event_type" name="event_type" class="form-control" required>
+                        <option value="">Select type</option>
+                        <option value="webinar" {% if event.event_type == 'webinar' %}selected{% endif %}>Webinar</option>
+                        <option value="workshop" {% if event.event_type == 'workshop' %}selected{% endif %}>Workshop</option>
+                        <option value="networking" {% if event.event_type == 'networking' %}selected{% endif %}>Networking</option>
+                        <option value="social" {% if event.event_type == 'social' %}selected{% endif %}>Social Gathering</option>
+                        <option value="conference" {% if event.event_type == 'conference' %}selected{% endif %}>Conference</option>
+                        <option value="seminar" {% if event.event_type == 'seminar' %}selected{% endif %}>Seminar</option>
+                        <option value="panel" {% if event.event_type == 'panel' %}selected{% endif %}>Panel Discussion</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="capacity">Maximum Capacity</label>
+                    <input type="number" id="capacity" name="capacity" class="form-control" min="1" value="{{ event.capacity if event.capacity else '' }}">
+                    <div class="helper-text">Leave empty for unlimited capacity</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Date and Time -->
+        <div class="form-section">
+            <h3><i class="fas fa-clock"></i> Date & Time</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date" class="required-field">Start Date & Time</label>
+                    <input type="datetime-local" id="start_date" name="start_date" class="form-control" required 
+                           value="{{ event.start_date.strftime('%Y-%m-%dT%H:%M') if event.start_date else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_date" class="required-field">End Date & Time</label>
+                    <input type="datetime-local" id="end_date" name="end_date" class="form-control" required 
+                           value="{{ event.end_date.strftime('%Y-%m-%dT%H:%M') if event.end_date else '' }}">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="registration_deadline">Registration Deadline</label>
+                <input type="datetime-local" id="registration_deadline" name="registration_deadline" class="form-control" 
+                       value="{{ event.registration_deadline.strftime('%Y-%m-%dT%H:%M') if event.registration_deadline else '' }}">
+                <div class="helper-text">Leave empty if registration closes at event start</div>
+            </div>
+        </div>
+        
+        <!-- Event Mode Selection -->
+        <div class="form-section">
+            <h3><i class="fas fa-map-marker-alt"></i> Event Location</h3>
+            
+            <div class="mode-selector">
+                <label class="mode-option">
+                    <input type="radio" name="event_mode" value="online" {% if event.event_mode == 'online' %}checked{% endif %} onchange="toggleEventMode()">
+                    <div class="mode-card">
+                        <i class="fas fa-video"></i>
+                        <h4>Online Event</h4>
+                        <p>Virtual meeting via Zoom, Teams, etc.</p>
+                    </div>
+                </label>
+                
+                <label class="mode-option">
+                    <input type="radio" name="event_mode" value="in-person" {% if event.event_mode == 'in-person' %}checked{% endif %} onchange="toggleEventMode()">
+                    <div class="mode-card">
+                        <i class="fas fa-building"></i>
+                        <h4>In-Person Event</h4>
+                        <p>Physical venue with location details</p>
+                    </div>
+                </label>
+                
+                <label class="mode-option">
+                    <input type="radio" name="event_mode" value="hybrid" {% if event.event_mode == 'hybrid' %}checked{% endif %} onchange="toggleEventMode()">
+                    <div class="mode-card">
+                        <i class="fas fa-globe"></i>
+                        <h4>Hybrid Event</h4>
+                        <p>Both online and in-person options</p>
+                    </div>
+                </label>
+            </div>
+            
+            <!-- Online Event Fields -->
+            <div id="onlineFields" class="online-fields" style="display: {% if event.event_mode == 'online' or event.event_mode == 'hybrid' %}block{% else %}none{% endif %};">
+                <div class="form-group">
+                    <label for="online_platform">Platform</label>
+                    <select id="online_platform" name="online_platform" class="form-control">
+                        <option value="">Select platform</option>
+                        <option value="zoom" {% if event.online_platform == 'zoom' %}selected{% endif %}>Zoom</option>
+                        <option value="teams" {% if event.online_platform == 'teams' %}selected{% endif %}>Microsoft Teams</option>
+                        <option value="google_meet" {% if event.online_platform == 'google_meet' %}selected{% endif %}>Google Meet</option>
+                        <option value="webex" {% if event.online_platform == 'webex' %}selected{% endif %}>Webex</option>
+                        <option value="other" {% if event.online_platform == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="online_link">Meeting Link</label>
+                    <input type="url" id="online_link" name="online_link" class="form-control" value="{{ event.online_link }}">
+                    <div class="helper-text">Provide the link to join the online meeting</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meeting_id">Meeting ID</label>
+                        <input type="text" id="meeting_id" name="meeting_id" class="form-control" value="{{ event.meeting_id }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="meeting_password">Password</label>
+                        <input type="text" id="meeting_password" name="meeting_password" class="form-control" value="{{ event.meeting_password }}">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dial_in_numbers">Dial-in Numbers</label>
+                    <textarea id="dial_in_numbers" name="dial_in_numbers" class="form-control" rows="2">{{ event.dial_in_numbers }}</textarea>
+                    <div class="helper-text">One phone number per line for dial-in access</div>
+                </div>
+            </div>
+            
+            <!-- Venue Fields -->
+            <div id="venueFields" class="venue-fields" style="display: {% if event.event_mode == 'in-person' or event.event_mode == 'hybrid' %}block{% else %}none{% endif %};">
+                <div class="form-group">
+                    <label for="venue_name">Venue Name</label>
+                    <input type="text" id="venue_name" name="venue_name" class="form-control" value="{{ event.venue_name }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="venue_address">Full Address</label>
+                    <input type="text" id="venue_address" name="venue_address" class="form-control" value="{{ event.venue_address }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="venue_capacity">Venue Capacity</label>
+                    <input type="number" id="venue_capacity" name="venue_capacity" class="form-control" min="1" value="{{ event.venue_capacity }}">
+                    <div class="helper-text">Maximum number of people the venue can hold</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Settings -->
+        <div class="form-section">
+            <h3><i class="fas fa-cog"></i> Additional Settings</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price">Price (ZAR)</label>
+                    <input type="number" id="price" name="price" class="form-control" min="0" step="0.01" value="{{ event.price }}">
+                    <div class="helper-text">Set to 0 for free events</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image_url">Event Image URL</label>
+                    <input type="text" id="image_url" name="image_url" class="form-control" placeholder="https://example.com/image.jpg">
+                    <div class="helper-text">Optional: Link to event banner image</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 2rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="is_published" value="true" {% if event.is_published %}checked{% endif %}>
+                    <span>Publish immediately</span>
+                </label>
+                
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="is_featured" value="true" {% if event.is_featured %}checked{% endif %}>
+                    <span>Feature this event (show on homepage)</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn-secondary" style="flex: 1; text-align: center;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleEventMode() {
+        const onlineFields = document.getElementById('onlineFields');
+        const venueFields = document.getElementById('venueFields');
+        const onlineRadio = document.querySelector('input[value="online"]');
+        const inPersonRadio = document.querySelector('input[value="in-person"]');
+        const hybridRadio = document.querySelector('input[value="hybrid"]');
+        
+        if (onlineRadio.checked) {
+            onlineFields.style.display = 'block';
+            venueFields.style.display = 'none';
+        } else if (inPersonRadio.checked) {
+            onlineFields.style.display = 'none';
+            venueFields.style.display = 'block';
+        } else if (hybridRadio.checked) {
+            onlineFields.style.display = 'block';
+            venueFields.style.display = 'block';
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleEventMode();
+        
+        // Set minimum date for datetime-local inputs to now
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const minDateTime = now.toISOString().slice(0, 16);
+        
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        if (startDateInput && !startDateInput.value) {
+            startDateInput.min = minDateTime;
+        }
+        if (endDateInput && !endDateInput.value) {
+            endDateInput.min = minDateTime;
+        }
+        
+        // Add form submit debugging
+        const form = document.getElementById('eventForm');
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted!');
+        });
+    });
+    
+    // Calculate duration when dates change
+    document.getElementById('start_date').addEventListener('change', calculateDuration);
+    document.getElementById('end_date').addEventListener('change', calculateDuration);
+    
+    function calculateDuration() {
+        const start = document.getElementById('start_date').value;
+        const end = document.getElementById('end_date').value;
+        
+        if (start && end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            const diffMs = endDate - startDate;
+            const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (diffHrs >= 0 && diffMins >= 0) {
+                console.log(`Duration: ${diffHrs} hours ${diffMins} minutes`);
+            } else {
+                alert('End date must be after start date');
+            }
+        }
+    }
+</script>
+{% endblock %}

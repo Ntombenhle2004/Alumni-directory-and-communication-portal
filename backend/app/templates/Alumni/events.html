@@ -2,89 +2,626 @@
 
 {% block title %}Events - Alumni Portal{% endblock %}
 
+{% block extra_css %}
+{{ super() }}
+<style>
+    .events-container {
+        width: 100%;
+    }
+    
+    .calendar-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .calendar-title h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .calendar-nav {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .calendar-nav button {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: #f8f9fa;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #2c3e50;
+    }
+    
+    .calendar-nav button:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .calendar-nav .today-btn {
+        width: auto;
+        padding: 0 1rem;
+        background: #667eea;
+        color: white;
+    }
+    
+    .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.25rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #2c3e50;
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.25rem;
+    }
+    
+    .calendar-day {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 0.5rem;
+        min-height: 80px;
+        border: 1px solid transparent;
+    }
+    
+    .calendar-day.today {
+        background: #e8f0fe;
+        border-color: #667eea;
+    }
+    
+    .calendar-day.empty {
+        background: transparent;
+        border: 1px dashed #e9ecef;
+    }
+    
+    .day-number {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .calendar-event {
+        background: #667eea;
+        color: white;
+        padding: 0.2rem 0.3rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        margin-bottom: 0.2rem;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .calendar-event.online { background: #27ae60; }
+    .calendar-event.in-person { background: #e74c3c; }
+    .calendar-event.hybrid { background: #f39c12; }
+    
+    .more-events {
+        color: #667eea;
+        font-size: 0.7rem;
+        text-align: center;
+        cursor: pointer;
+    }
+    
+    /* Two-column layout */
+    .events-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    /* Clean Card Style - Matching your provided code */
+    .event-list-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .event-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .event-list-header h3 {
+        font-size: 1.2rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .event-list-header h3 i {
+        color: #667eea;
+    }
+    
+    .event-filters {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .filter-btn {
+        padding: 0.3rem 1rem;
+        border: 1px solid #e0e0e0;
+        background: white;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #666;
+    }
+    
+    .filter-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    
+    .filter-btn.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+    
+    .event-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .event-list-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        background: #f8f9fa;
+        transition: all 0.2s;
+    }
+    
+    .event-list-item:hover {
+        background: #e8f0fe;
+        transform: translateX(3px);
+    }
+    
+    .event-date-badge {
+        min-width: 50px;
+        text-align: center;
+        background: white;
+        padding: 0.4rem 0.2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .event-date-badge .month {
+        font-size: 0.7rem;
+        color: #667eea;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .event-date-badge .day {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1.2;
+    }
+    
+    .event-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .event-info h4 {
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
+        color: #2c3e50;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .event-meta {
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .event-meta i {
+        color: #667eea;
+        width: 12px;
+        margin-right: 0.2rem;
+    }
+    
+    .event-type-badge {
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        color: white;
+        white-space: nowrap;
+        min-width: 70px;
+        text-align: center;
+    }
+    
+    .event-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .event-actions a {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-view {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-view:hover {
+        background: #764ba2;
+        transform: scale(1.1);
+    }
+    
+    .btn-calendar {
+        background: white;
+        color: #667eea;
+        border: 1px solid #667eea;
+    }
+    
+    .btn-calendar:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit {
+        background: #f39c12;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #e67e22;
+        transform: scale(1.1);
+    }
+    
+    .badge-online { background: #27ae60; }
+    .badge-in-person { background: #e74c3c; }
+    .badge-hybrid { background: #f39c12; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        color: #ccc;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-small {
+        display: inline-block;
+        padding: 0.4rem 1.2rem;
+        background: #667eea;
+        color: white;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+    
+    .btn-small:hover {
+        background: #764ba2;
+    }
+    
+    @media (max-width: 768px) {
+        .events-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .event-list-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block alumni_content %}
-<div class="welcome-card">
-    <h1>Events & Networking</h1>
-    <p>Discover and manage alumni events.</p>
-</div>
-
-<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-    <a href="{{ url_for('events.create_event') }}" style="margin-left: auto; padding: 0.75rem 2rem; background: #27ae60; color: white; border: none; border-radius: 8px; text-decoration: none;">
-        <i class="fas fa-plus"></i> Create Event
-    </a>
-</div>
-
-<h2 style="margin-bottom: 1rem;">Upcoming Events</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
-    {% for event in upcoming_events %}
-    <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-        <div style="height: 160px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative;">
-            {% if event.event_mode == 'online' %}
-            <div style="position: absolute; top: 1rem; right: 1rem; background: #27ae60; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">
-                <i class="fas fa-video"></i> Online
-            </div>
-            {% elif event.event_mode == 'in-person' %}
-            <div style="position: absolute; top: 1rem; right: 1rem; background: #e74c3c; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">
-                <i class="fas fa-building"></i> In-Person
-            </div>
-            {% else %}
-            <div style="position: absolute; top: 1rem; right: 1rem; background: #f39c12; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">
-                <i class="fas fa-globe"></i> Hybrid
-            </div>
-            {% endif %}
-            <div style="position: absolute; bottom: 1rem; left: 1rem; color: white;">
-                <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px;">
-                    {{ event.start_date.strftime('%b %d, %Y') }}
-                </span>
-            </div>
+<div class="events-container">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h1 style="font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.25rem;">Events & Networking</h1>
+            <p style="color: #666;">Discover, create, and manage alumni events</p>
         </div>
-        <div style="padding: 1.5rem;">
-            <h3 style="margin-bottom: 0.5rem;">{{ event.title }}</h3>
-            <p style="color: #666; margin-bottom: 1rem;">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <span><i class="fas fa-users"></i> {{ event.registered_count }}/{% if event.capacity %} {{ event.capacity }}{% else %} Unlimited{% endif %}</span>
-                <span><i class="fas fa-tag"></i> 
-                    {% if event.price == 0 %}
-                        Free
-                    {% else %}
-                        R{{ "%.2f"|format(event.price) }}
-                    {% endif %}
-                </span>
-            </div>
-            <a href="{{ url_for('events.view_event', event_id=event.id) }}" style="display: block; text-align: center; padding: 0.75rem; background: #667eea; color: white; border: none; border-radius: 8px; text-decoration: none;">
-                View Details
-            </a>
-        </div>
-    </div>
-    {% else %}
-    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: white; border-radius: 12px;">
-        <i class="fas fa-calendar-times" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
-        <p style="color: #666;">No upcoming events found.</p>
-        <a href="{{ url_for('events.create_event') }}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 2rem; background: #667eea; color: white; border-radius: 8px; text-decoration: none;">
-            Create an Event
+        <a href="{{ url_for('events.create_event') }}" style="padding: 0.6rem 1.5rem; background: #27ae60; color: white; border-radius: 8px; text-decoration: none; font-size: 0.9rem;">
+            <i class="fas fa-plus"></i> Create Event
         </a>
     </div>
-    {% endfor %}
-</div>
 
-{% if my_events %}
-<h2 style="margin-bottom: 1rem;">My Events</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
-    {% for event in my_events %}
-    <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-        <div style="padding: 1.5rem;">
-            <h3 style="margin-bottom: 0.5rem;">{{ event.title }}</h3>
-            <p style="color: #666; margin-bottom: 1rem;">{{ event.start_date.strftime('%b %d, %Y at %I:%M %p') }}</p>
-            <div style="display: flex; gap: 0.5rem;">
-                <span class="badge" style="background: #667eea;">{{ event.registered_count }} Registered</span>
-                <span class="badge" style="background: #27ae60;">{{ event.status }}</span>
+    <!-- Calendar View -->
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-title">
+                <h2 id="currentMonth"></h2>
             </div>
-            <a href="{{ url_for('events.view_event', event_id=event.id) }}" style="display: block; margin-top: 1rem; text-align: center; padding: 0.5rem; background: #667eea; color: white; border-radius: 6px; text-decoration: none;">
-                View Details
-            </a>
+            <div class="calendar-nav">
+                <button onclick="previousMonth()"><i class="fas fa-chevron-left"></i></button>
+                <button class="today-btn" onclick="goToToday()">Today</button>
+                <button onclick="nextMonth()"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+        
+        <div class="calendar-weekdays">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- Two-column Event Lists -->
+    <div class="events-row">
+        <!-- Upcoming Events Column -->
+        <div class="event-list-container">
+            <div class="event-list-header">
+                <h3><i class="fas fa-calendar-alt"></i> Upcoming Events</h3>
+                <div class="event-filters">
+                    <button class="filter-btn active" onclick="filterEvents('upcoming', 'all', this)">All</button>
+                    <button class="filter-btn" onclick="filterEvents('upcoming', 'online', this)">Online</button>
+                    <button class="filter-btn" onclick="filterEvents('upcoming', 'in-person', this)">In-Person</button>
+                    <button class="filter-btn" onclick="filterEvents('upcoming', 'hybrid', this)">Hybrid</button>
+                </div>
+            </div>
+            
+            <div class="event-list" id="upcomingEventList">
+                {% for event in upcoming_events %}
+                <div class="event-list-item" data-mode="{{ event.event_mode }}">
+                    <div class="event-date-badge">
+                        <div class="month">{{ event.start_date.strftime('%b') }}</div>
+                        <div class="day">{{ event.start_date.strftime('%d') }}</div>
+                    </div>
+                    <div class="event-info">
+                        <h4>{{ event.title }}</h4>
+                        <div class="event-meta">
+                            <span><i class="fas fa-clock"></i> {{ event.start_date.strftime('%I:%M %p') }}</span>
+                            {% if event.venue_name %}
+                            <span><i class="fas fa-map-marker-alt"></i> {{ event.venue_name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="event-type-badge 
+                        {% if event.event_mode == 'online' %}badge-online
+                        {% elif event.event_mode == 'in-person' %}badge-in-person
+                        {% else %}badge-hybrid{% endif %}">
+                        {{ event.event_mode|title }}
+                    </div>
+                    <div class="event-actions">
+                        <a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn-view" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="btn-calendar" onclick="addToCalendar({{ event.id }}, event)" title="Add to Calendar">
+                            <i class="fas fa-calendar-plus"></i>
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No upcoming events found</p>
+                    <a href="{{ url_for('events.create_event') }}" class="btn-small">Create Event</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- My Events Column (Events created by logged-in user) -->
+        <div class="event-list-container">
+            <div class="event-list-header">
+                <h3><i class="fas fa-star"></i> My Events</h3>
+                <div class="event-filters">
+                    <button class="filter-btn active" onclick="filterEvents('my', 'all', this)">All</button>
+                    <button class="filter-btn" onclick="filterEvents('my', 'online', this)">Online</button>
+                    <button class="filter-btn" onclick="filterEvents('my', 'in-person', this)">In-Person</button>
+                    <button class="filter-btn" onclick="filterEvents('my', 'hybrid', this)">Hybrid</button>
+                </div>
+            </div>
+            
+            <div class="event-list" id="myEventList">
+                {% for event in my_events %}
+                <div class="event-list-item" data-mode="{{ event.event_mode }}">
+                    <div class="event-date-badge">
+                        <div class="month">{{ event.start_date.strftime('%b') }}</div>
+                        <div class="day">{{ event.start_date.strftime('%d') }}</div>
+                    </div>
+                    <div class="event-info">
+                        <h4>{{ event.title }}</h4>
+                        <div class="event-meta">
+                            <span><i class="fas fa-clock"></i> {{ event.start_date.strftime('%I:%M %p') }}</span>
+                            <span><i class="fas fa-users"></i> {{ event.registered_count }}/{% if event.capacity %}{{ event.capacity }}{% else %}∞{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="event-type-badge 
+                        {% if event.event_mode == 'online' %}badge-online
+                        {% elif event.event_mode == 'in-person' %}badge-in-person
+                        {% else %}badge-hybrid{% endif %}">
+                        {{ event.event_mode|title }}
+                    </div>
+                    <div class="event-actions">
+                        <a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn-view" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn-edit" title="Edit Event">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-plus"></i>
+                    <p>You haven't created any events yet</p>
+                    <a href="{{ url_for('events.create_event') }}" class="btn-small">Create Your First Event</a>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
-    {% endfor %}
 </div>
-{% endif %}
+
+<script>
+    // Event data from backend - Use a Set to ensure no duplicates
+    const eventMap = new Map();
+    
+    {% for event in upcoming_events %}
+        eventMap.set({{ event.id }}, {
+            id: {{ event.id }},
+            title: "{{ event.title|replace('"', '\\"')|safe }}",
+            date: "{{ event.start_date.strftime('%Y-%m-%d') }}",
+            time: "{{ event.start_date.strftime('%I:%M %p') }}",
+            mode: "{{ event.event_mode }}",
+            venue: "{{ event.venue_name|replace('"', '\\"')|safe or '' }}"
+        });
+    {% endfor %}
+    
+    {% for event in my_events %}
+        // Only add if not already in map (prevents duplicates)
+        if (!eventMap.has({{ event.id }})) {
+            eventMap.set({{ event.id }}, {
+                id: {{ event.id }},
+                title: "{{ event.title|replace('"', '\\"')|safe }}",
+                date: "{{ event.start_date.strftime('%Y-%m-%d') }}",
+                time: "{{ event.start_date.strftime('%I:%M %p') }}",
+                mode: "{{ event.event_mode }}",
+                venue: "{{ event.venue_name|replace('"', '\\"')|safe or '' }}"
+            });
+        }
+    {% endfor %}
+    
+    // Convert map to array for calendar
+    const events = Array.from(eventMap.values());
+    
+    let currentDate = new Date();
+    
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const today = new Date();
+        
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+        document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startingDay = firstDay.getDay();
+        const totalDays = lastDay.getDate();
+        
+        let html = '';
+        
+        // Empty cells
+        for (let i = 0; i < startingDay; i++) {
+            html += '<div class="calendar-day empty"></div>';
+        }
+        
+        // Days of month
+        for (let day = 1; day <= totalDays; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayEvents = events.filter(e => e.date === dateStr);
+            const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+            
+            html += `<div class="calendar-day ${isToday ? 'today' : ''}">`;
+            html += `<div class="day-number">${day}</div>`;
+            
+            dayEvents.slice(0, 2).forEach(event => {
+                html += `
+                    <div class="calendar-event ${event.mode}" onclick="window.location.href='/events/${event.id}'">
+                        ${event.title}
+                    </div>
+                `;
+            });
+            
+            if (dayEvents.length > 2) {
+                html += `<div class="more-events" onclick="alert('${dayEvents.length} events on this day')">+${dayEvents.length - 2}</div>`;
+            }
+            
+            html += `</div>`;
+        }
+        
+        document.getElementById('calendarGrid').innerHTML = html;
+    }
+    
+    function previousMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+    function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+    function goToToday() { currentDate = new Date(); renderCalendar(); }
+    
+    function filterEvents(listType, mode, btn) {
+        // Update active button
+        const container = listType === 'upcoming' ? 'upcomingEventList' : 'myEventList';
+        const parentContainer = document.getElementById(container).parentElement;
+        const buttons = parentContainer.querySelectorAll('.filter-btn');
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Filter items
+        document.querySelectorAll(`#${container} .event-list-item`).forEach(item => {
+            item.style.display = mode === 'all' || item.dataset.mode === mode ? 'flex' : 'none';
+        });
+    }
+    
+    function addToCalendar(eventId, e) {
+        e.preventDefault();
+        const event = events.find(e => e.id == eventId);
+        if (!event) return;
+        
+        const startDate = new Date(event.date + 'T' + event.time);
+        const start = startDate.toISOString().replace(/-|:|\.\d+/g, '');
+        
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${start}&location=${encodeURIComponent(event.venue)}`;
+        window.open(url, '_blank');
+    }
+    
+    document.addEventListener('DOMContentLoaded', renderCalendar);
+</script>
 {% endblock %}

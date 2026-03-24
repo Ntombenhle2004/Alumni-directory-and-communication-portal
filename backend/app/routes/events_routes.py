@@ -33,6 +33,7 @@ def list_events():
                          past_events=past_events)
 
 @events_bp.route("/create", methods=['GET', 'POST'])
+@events_bp.route("/create", methods=['GET', 'POST'])
 def create_event():
     user = get_current_user()
     if not user or user.role not in ['alumni', 'admin']:
@@ -41,26 +42,21 @@ def create_event():
     
     if request.method == 'POST':
         try:
-          
+            # Basic event info
             title = request.form.get('title')
             description = request.form.get('description')
             event_type = request.form.get('event_type')
             event_mode = request.form.get('event_mode')
             
-            
+            # Parse dates
             start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%dT%H:%M')
             end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%dT%H:%M')
             
-            location = request.form.get('location')
-            online_link = request.form.get('online_link')
+            # Common fields
             capacity = request.form.get('capacity')
             price = request.form.get('price', 0)
             
-           
-            if start_date >= end_date:
-                flash('End date must be after start date.', 'error')
-                return render_template("events/create.html", user=user)
-            
+            # Create event object
             new_event = Event(
                 title=title,
                 description=description,
@@ -68,13 +64,38 @@ def create_event():
                 event_mode=event_mode,
                 start_date=start_date,
                 end_date=end_date,
-                location=location,
-                online_link=online_link,
                 capacity=int(capacity) if capacity else None,
                 price=float(price),
                 organizer_id=user.id,
                 is_published=True
             )
+            
+            
+            if event_mode in ['in-person', 'hybrid']:
+                venue_name = request.form.get('venue_name')
+                if not venue_name:
+                    flash('Venue name is required for in-person events.', 'error')
+                    return render_template("events/create.html", user=user)
+                
+            if event_mode in ['online', 'hybrid']:
+                new_event.online_platform = request.form.get('online_platform')
+                new_event.online_link = request.form.get('online_link')
+                new_event.meeting_id = request.form.get('meeting_id')
+                new_event.meeting_password = request.form.get('meeting_password')
+                new_event.dial_in_numbers = request.form.get('dial_in_numbers')
+                
+            
+            if event_mode in ['online', 'hybrid']:
+                online_link = request.form.get('online_link')
+                if not online_link:
+                    flash('Online link is required for online events.', 'error')
+                    return render_template("events/create.html", user=user)
+                
+                new_event.online_platform = request.form.get('online_platform')
+                new_event.online_link = online_link
+                new_event.meeting_id = request.form.get('meeting_id')
+                new_event.meeting_password = request.form.get('meeting_password')
+                new_event.dial_in_numbers = request.form.get('dial_in_numbers')
             
             db.session.add(new_event)
             db.session.commit()
@@ -207,41 +228,6 @@ def my_events():
                          organized_events=organized_events,
                          registered_events=registered_events)
 
-@events_bp.route("/<int:event_id>/edit", methods=['GET', 'POST'])
-def edit_event(event_id):
-    user = get_current_user()
-    if not user:
-        return redirect(url_for('views.login_page'))
-    
-    event = Event.query.get_or_404(event_id)
-    
- 
-    if event.organizer_id != user.id and user.role != 'admin':
-        flash('You do not have permission to edit this event.', 'error')
-        return redirect(url_for('events.view_event', event_id=event_id))
-    
-    if request.method == 'POST':
-        try:
-            event.title = request.form.get('title')
-            event.description = request.form.get('description')
-            event.event_type = request.form.get('event_type')
-            event.event_mode = request.form.get('event_mode')
-            event.start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%dT%H:%M')
-            event.end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%dT%H:%M')
-            event.location = request.form.get('location')
-            event.online_link = request.form.get('online_link')
-            event.capacity = int(request.form.get('capacity')) if request.form.get('capacity') else None
-            event.price = float(request.form.get('price', 0))
-            
-            db.session.commit()
-            flash('Event updated successfully!', 'success')
-            return redirect(url_for('events.view_event', event_id=event.id))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating event: {str(e)}', 'error')
-    
-    return render_template("events/edit.html", user=user, event=event)
 
 @events_bp.route("/<int:event_id>/delete", methods=['POST'])
 def delete_event(event_id):
@@ -286,3 +272,91 @@ def alumni_events():
                          user=user,
                          upcoming_events=upcoming_events,
                          my_events=my_events)
+
+@events_bp.route("/edit/<int:event_id>", methods=['GET', 'POST'])
+def edit_event(event_id):
+    """Edit an existing event"""
+    user = get_current_user()
+    if not user or user.role not in ['alumni', 'admin']:
+        flash('You need to be logged in as alumni to edit events.', 'error')
+        return redirect(url_for('views.login_page'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Check if user is the organizer
+    if event.organizer_id != user.id and user.role != 'admin':
+        flash('You do not have permission to edit this event.', 'error')
+        return redirect(url_for('events.alumni_events'))
+    
+    print(f"Method: {request.method}")  # Debug print
+    
+    if request.method == 'POST':
+        print("POST request received")  # Debug print
+        try:
+            # Print all form data for debugging
+            print(f"Form data: {request.form}")
+            
+            # Basic event info
+            event.title = request.form.get('title')
+            event.description = request.form.get('description')
+            event.event_type = request.form.get('event_type')
+            event.event_mode = request.form.get('event_mode')
+            
+            # Parse dates
+            start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%dT%H:%M')
+            end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%dT%H:%M')
+            event.start_date = start_date
+            event.end_date = end_date
+            
+            # Registration deadline
+            deadline = request.form.get('registration_deadline')
+            if deadline:
+                event.registration_deadline = datetime.strptime(deadline, '%Y-%m-%dT%H:%M')
+            else:
+                event.registration_deadline = None
+            
+            # Common fields
+            event.capacity = request.form.get('capacity') if request.form.get('capacity') else None
+            event.price = float(request.form.get('price', 0))
+            event.image_url = request.form.get('image_url')
+            
+            # Handle venue fields (for in-person or hybrid)
+            if event.event_mode in ['in-person', 'hybrid']:
+                event.venue_name = request.form.get('venue_name')
+                event.venue_address = request.form.get('venue_address')
+                event.venue_capacity = request.form.get('venue_capacity')
+            else:
+                event.venue_name = None
+                event.venue_address = None
+                event.venue_capacity = None
+            
+            # Handle online fields (for online or hybrid)
+            if event.event_mode in ['online', 'hybrid']:
+                event.online_platform = request.form.get('online_platform')
+                event.online_link = request.form.get('online_link')
+                event.meeting_id = request.form.get('meeting_id')
+                event.meeting_password = request.form.get('meeting_password')
+                event.dial_in_numbers = request.form.get('dial_in_numbers')
+            else:
+                event.online_platform = None
+                event.online_link = None
+                event.meeting_id = None
+                event.meeting_password = None
+                event.dial_in_numbers = None
+            
+            # Additional settings
+            event.is_published = request.form.get('is_published') == 'true'
+            event.is_featured = request.form.get('is_featured') == 'true'
+            
+            db.session.commit()
+            
+            flash('Event updated successfully!', 'success')
+            return redirect(url_for('events.view_event', event_id=event.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error: {str(e)}")  # Debug print
+            flash(f'Error updating event: {str(e)}', 'error')
+            return render_template("events/edit_event.html", user=user, event=event)
+    
+    return render_template("events/edit_event.html", user=user, event=event)

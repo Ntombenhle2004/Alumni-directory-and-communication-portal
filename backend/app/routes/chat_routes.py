@@ -1,4 +1,7 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
+from flask_mail import Message
+
+from ..models.user import Conversation, Message, User
 from ..services.chat_service import (
     get_chat_history, 
     start_conversation_logic, 
@@ -74,5 +77,38 @@ def delete_chat(conv_id):
     if error:
         return jsonify({"error": error}), 400
     return jsonify({"message": "Conversation and all messages cleared"}), 200
+
+@chat_bp.route("/chat/my-conversations", methods=["GET"])
+def get_my_conversations():
+    """Get all conversations for the current user"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    from ..models.user import User
+    
+    # Get conversations where user is either student or alumni
+    conversations = Conversation.query.filter(
+        (Conversation.student_id == user_id) | (Conversation.alumni_id == user_id)
+    ).order_by(Conversation.created_at.desc()).all()
+    
+    result = []
+    for conv in conversations:
+        # Determine the other user
+        other_id = conv.alumni_id if conv.student_id == user_id else conv.student_id
+        other_user = User.query.get(other_id)
+        
+        # Get last message
+        last_message = Message.query.filter_by(conversation_id=conv.id).order_by(Message.sent_at.desc()).first()
+        
+        result.append({
+            'id': conv.id,
+            'other_user_id': other_id,
+            'other_user_name': other_user.full_name if other_user else 'Unknown',
+            'last_message': last_message.message[:50] if last_message else None,
+            'last_message_time': last_message.sent_at.strftime('%H:%M') if last_message else None
+        })
+    
+    return jsonify(result), 200
 
 

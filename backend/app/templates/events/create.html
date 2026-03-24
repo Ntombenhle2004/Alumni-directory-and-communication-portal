@@ -1,79 +1,553 @@
-{% extends "base.html" %}
+{% extends "alumni/base_alumni.html" %}
 
-{% block content %}
-<div style="max-width: 800px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px;">
-    <h1 style="margin-bottom: 2rem;">Create New Event</h1>
+{% block title %}Create Event - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
     
-    <form method="POST">
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Event Title</label>
-            <input type="text" name="title" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
-        </div>
-        
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Description</label>
-            <textarea name="description" rows="5" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;"></textarea>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Event Type</label>
-                <select name="event_type" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
-                    <option value="webinar">Webinar</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="networking">Networking</option>
-                    <option value="social">Social</option>
-                    <option value="conference">Conference</option>
-                </select>
+    .form-title {
+        font-size: 2rem;
+        color: #2c3e50;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-section h3 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-section h3 i {
+        color: #667eea;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .mode-selector {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .mode-option {
+        flex: 1;
+        cursor: pointer;
+    }
+    
+    .mode-option input[type="radio"] {
+        display: none;
+    }
+    
+    .mode-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    
+    .mode-option input[type="radio"]:checked + .mode-card {
+        border-color: #667eea;
+        background: #f0f3ff;
+    }
+    
+    .mode-card i {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .mode-card h4 {
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    
+    .mode-card p {
+        color: #666;
+        font-size: 0.85rem;
+    }
+    
+    .online-fields, .venue-fields {
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .calendar-options {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+    }
+    
+    .calendar-btn {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-width: 120px;
+    }
+    
+    .calendar-btn:hover {
+        border-color: #667eea;
+        background: #f8f9fa;
+    }
+    
+    .calendar-btn.google {
+        color: #ea4335;
+    }
+    
+    .calendar-btn.outlook {
+        color: #0078d4;
+    }
+    
+    .calendar-btn.apple {
+        color: #333;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #e9ecef;
+        color: #2c3e50;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-secondary:hover {
+        background: #dee2e6;
+    }
+    
+    .helper-text {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block alumni_content %}
+<div class="form-container">
+      <div style="margin-bottom: 1rem;">
+    <a href="{{ url_for('events.alumni_events') }}" style="color: #667eea; text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Back to Events
+    </a>
+</div>
+    <h1 class="form-title">
+        <i class="fas fa-calendar-plus" style="color: #667eea;"></i>
+        Create New Event
+    </h1>
+    
+    <form method="POST" id="eventForm">
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+            
+            <div class="form-group">
+                <label for="title">Event Title *</label>
+                <input type="text" id="title" name="title" class="form-control" required placeholder="e.g., Alumni Networking Mixer 2024">
             </div>
             
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Event Mode</label>
-                <select name="event_mode" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
-                    <option value="online">Online</option>
-                    <option value="in-person">In-Person</option>
-                    <option value="hybrid">Hybrid</option>
-                </select>
-            </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Start Date & Time</label>
-                <input type="datetime-local" name="start_date" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" class="form-control" rows="5" required placeholder="Describe your event..."></textarea>
             </div>
             
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">End Date & Time</label>
-                <input type="datetime-local" name="end_date" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="event_type">Event Type *</label>
+                    <select id="event_type" name="event_type" class="form-control" required>
+                        <option value="">Select type</option>
+                        <option value="webinar">Webinar</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="networking">Networking</option>
+                        <option value="social">Social Gathering</option>
+                        <option value="conference">Conference</option>
+                        <option value="seminar">Seminar</option>
+                        <option value="panel">Panel Discussion</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="capacity">Maximum Capacity</label>
+                    <input type="number" id="capacity" name="capacity" class="form-control" min="1" placeholder="Leave empty for unlimited">
+                </div>
             </div>
         </div>
         
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Location (for in-person/hybrid)</label>
-            <input type="text" name="location" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
-        </div>
-        
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Online Link (for online/hybrid)</label>
-            <input type="url" name="online_link" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Capacity (leave empty for unlimited)</label>
-                <input type="number" name="capacity" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
+        <!-- Date and Time -->
+        <div class="form-section">
+            <h3><i class="fas fa-clock"></i> Date & Time</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start Date & Time *</label>
+                    <input type="datetime-local" id="start_date" name="start_date" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_date">End Date & Time *</label>
+                    <input type="datetime-local" id="end_date" name="end_date" class="form-control" required>
+                </div>
             </div>
             
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Price (0 for free)</label>
-                <input type="number" step="0.01" name="price" value="0" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
+            <div class="form-group">
+                <label for="registration_deadline">Registration Deadline</label>
+                <input type="datetime-local" id="registration_deadline" name="registration_deadline" class="form-control">
+                <div class="helper-text">Leave empty if registration closes at event start</div>
             </div>
         </div>
         
-        <button type="submit" style="width: 100%; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;">
-            Create Event
-        </button>
+        <!-- Event Mode Selection -->
+        <div class="form-section">
+            <h3><i class="fas fa-map-marker-alt"></i> Event Location</h3>
+            
+            <div class="mode-selector">
+                <label class="mode-option">
+                    <input type="radio" name="event_mode" value="online" checked onchange="toggleEventMode()">
+                    <div class="mode-card">
+                        <i class="fas fa-video"></i>
+                        <h4>Online Event</h4>
+                        <p>Virtual meeting via Zoom, Teams, etc.</p>
+                    </div>
+                </label>
+                
+                <label class="mode-option">
+                    <input type="radio" name="event_mode" value="in-person" onchange="toggleEventMode()">
+                    <div class="mode-card">
+                        <i class="fas fa-building"></i>
+                        <h4>In-Person Event</h4>
+                        <p>Physical venue with location details</p>
+                    </div>
+                </label>
+                
+                <label class="mode-option">
+                    <input type="radio" name="event_mode" value="hybrid" onchange="toggleEventMode()">
+                    <div class="mode-card">
+                        <i class="fas fa-globe"></i>
+                        <h4>Hybrid Event</h4>
+                        <p>Both online and in-person options</p>
+                    </div>
+                </label>
+            </div>
+            
+            <!-- Online Event Fields -->
+            <div id="onlineFields" class="online-fields" style="display: block;">
+                <div class="form-group">
+                    <label for="online_platform">Platform *</label>
+                    <select id="online_platform" name="online_platform" class="form-control">
+                        <option value="">Select platform</option>
+                        <option value="zoom">Zoom</option>
+                        <option value="teams">Microsoft Teams</option>
+                        <option value="google_meet">Google Meet</option>
+                        <option value="webex">Webex</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="online_link">Meeting Link *</label>
+                    <input type="url" id="online_link" name="online_link" class="form-control" placeholder="https://zoom.us/j/...">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meeting_id">Meeting ID</label>
+                        <input type="text" id="meeting_id" name="meeting_id" class="form-control" placeholder="e.g., 123 456 7890">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="meeting_password">Password</label>
+                        <input type="text" id="meeting_password" name="meeting_password" class="form-control" placeholder="Optional">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dial_in_numbers">Dial-in Numbers</label>
+                    <textarea id="dial_in_numbers" name="dial_in_numbers" class="form-control" rows="2" placeholder="Phone numbers for dial-in access"></textarea>
+                </div>
+            </div>
+            
+            <!-- Venue Fields -->
+            <div id="venueFields" class="venue-fields">
+                <div class="form-group">
+                    <label for="venue_name">Venue Name *</label>
+                    <input type="text" id="venue_name" name="venue_name" class="form-control" placeholder="e.g., Main Hall, Student Center">
+                </div>
+                
+                <div class="form-group">
+                    <label for="venue_address">Full Address *</label>
+                    <input type="text" id="venue_address" name="venue_address" class="form-control" placeholder="Street address, city, postal code">
+                </div>
+                
+                <div class="form-group">
+                    <label for="venue_capacity">Venue Capacity</label>
+                    <input type="number" id="venue_capacity" name="venue_capacity" class="form-control" min="1" placeholder="Maximum people venue can hold">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-info-circle"></i> Venue Booking Information</label>
+                    <div style="background: #e8f0fe; padding: 1rem; border-radius: 8px; color: #2c3e50;">
+                        <p style="margin-bottom: 0.5rem;"><strong>Note:</strong> Venue booking confirmation will be sent to your email. Please ensure you have:</p>
+                        <ul style="margin-left: 1.5rem; color: #666;">
+                            <li>Booking confirmation from venue</li>
+                            <li>Insurance certificate (if required)</li>
+                            <li>Catering arrangements (if applicable)</li>
+                            <li>AV equipment requirements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Calendar Integration -->
+        <div class="form-section">
+            <h3><i class="fas fa-calendar-alt"></i> Calendar Integration</h3>
+            <p style="color: #666; margin-bottom: 1rem;">Add this event to your calendar automatically</p>
+            
+            <div class="calendar-options">
+                <button type="button" class="calendar-btn google" onclick="addToCalendar('google')">
+                    <i class="fab fa-google"></i> Google Calendar
+                </button>
+                <button type="button" class="calendar-btn outlook" onclick="addToCalendar('outlook')">
+                    <i class="fab fa-microsoft"></i> Outlook
+                </button>
+                <button type="button" class="calendar-btn apple" onclick="addToCalendar('apple')">
+                    <i class="fab fa-apple"></i> iCalendar
+                </button>
+            </div>
+            <input type="hidden" id="calendar_type" name="calendar_type" value="">
+            <input type="hidden" id="calendar_event_id" name="calendar_event_id" value="">
+        </div>
+        
+        <!-- Additional Settings -->
+        <div class="form-section">
+            <h3><i class="fas fa-cog"></i> Additional Settings</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                <label for="price">Price (ZAR)</label>
+                <input type="number" id="price" name="price" class="form-control" min="0" step="0.01" value="0">
+                <div class="helper-text">Set to 0 for free events</div>
+            </div>
+                
+                <div class="form-group">
+                    <label for="image_url">Event Image URL</label>
+                    <input type="url" id="image_url" name="image_url" class="form-control" placeholder="https://example.com/image.jpg">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="is_published" value="true" checked>
+                    <span>Publish immediately</span>
+                </label>
+                
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="is_featured" value="true">
+                    <span>Feature this event</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-check"></i> Create Event
+            </button>
+            <a href="{{ url_for('events.alumni_events') }}" class="btn-secondary" style="flex: 1;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+      
     </form>
 </div>
+
+<script>
+    function toggleEventMode() {
+        const onlineFields = document.getElementById('onlineFields');
+        const venueFields = document.getElementById('venueFields');
+        const onlineRadio = document.querySelector('input[value="online"]');
+        const inPersonRadio = document.querySelector('input[value="in-person"]');
+        const hybridRadio = document.querySelector('input[value="hybrid"]');
+        
+        if (onlineRadio.checked) {
+            onlineFields.style.display = 'block';
+            venueFields.style.display = 'none';
+            // Make online fields required
+            document.getElementById('online_platform').required = true;
+            document.getElementById('online_link').required = true;
+            // Remove required from venue fields
+            document.getElementById('venue_name').required = false;
+            document.getElementById('venue_address').required = false;
+        } else if (inPersonRadio.checked) {
+            onlineFields.style.display = 'none';
+            venueFields.style.display = 'block';
+            // Make venue fields required
+            document.getElementById('venue_name').required = true;
+            document.getElementById('venue_address').required = true;
+            // Remove required from online fields
+            document.getElementById('online_platform').required = false;
+            document.getElementById('online_link').required = false;
+        } else if (hybridRadio.checked) {
+            onlineFields.style.display = 'block';
+            venueFields.style.display = 'block';
+            // Make both required
+            document.getElementById('online_platform').required = true;
+            document.getElementById('online_link').required = true;
+            document.getElementById('venue_name').required = true;
+            document.getElementById('venue_address').required = true;
+        }
+    }
+    
+    function addToCalendar(calendarType) {
+        document.getElementById('calendar_type').value = calendarType;
+        
+        // Get form data
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const location = document.querySelector('input[name="event_mode"]:checked').value === 'online' 
+            ? document.getElementById('online_link').value 
+            : document.getElementById('venue_address').value;
+        
+        if (!title || !startDate || !endDate) {
+            alert('Please fill in basic event details first');
+            return;
+        }
+        
+        // Format dates for calendar
+        const start = new Date(startDate).toISOString().replace(/-|:|\.\d+/g, '');
+        const end = new Date(endDate).toISOString().replace(/-|:|\.\d+/g, '');
+        
+        let calendarUrl = '';
+        
+        if (calendarType === 'google') {
+            calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+            window.open(calendarUrl, '_blank');
+        } else if (calendarType === 'outlook') {
+            calendarUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(title)}&startdt=${startDate}&enddt=${endDate}&body=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+            window.open(calendarUrl, '_blank');
+        } else if (calendarType === 'apple') {
+            // Create .ics file for iCalendar
+            const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:${title}
+DESCRIPTION:${description}
+LOCATION:${location}
+DTSTART:${start}
+DTEND:${end}
+END:VEVENT
+END:VCALENDAR`;
+            
+            const blob = new Blob([icsContent], { type: 'text/calendar' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'event.ics';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleEventMode();
+    });
+</script>
 {% endblock %}

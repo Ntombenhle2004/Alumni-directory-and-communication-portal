@@ -1,0 +1,592 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}My Mentors - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .mentorship-container {
+        width: 100%;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon.active { background: #27ae60; }
+    .stat-icon.completed { background: #3498db; }
+    .stat-icon.pending { background: #f39c12; }
+    .stat-icon.requests { background: #e74c3c; }
+    
+    .stat-content h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .stat-content p {
+        color: #666;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+        color: #2c3e50;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-header h2 i {
+        color: #667eea;
+    }
+    
+    .section-header .badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+    
+    /* Pending Requests Styles */
+    .request-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        padding: 1.2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid #f0f0f0;
+        transition: all 0.2s;
+    }
+    
+    .request-item:hover {
+        border-color: #f39c12;
+        transform: translateX(3px);
+        background: #fff9e6;
+    }
+    
+    .request-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .request-content {
+        flex: 1;
+    }
+    
+    .request-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .request-message {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 8px;
+        border-left: 3px solid #f39c12;
+    }
+    
+    .request-meta {
+        display: flex;
+        gap: 1rem;
+        color: #999;
+        font-size: 0.8rem;
+    }
+    
+    .request-meta i {
+        margin-right: 0.25rem;
+        color: #f39c12;
+    }
+    
+    .request-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: #f39c12;
+        color: white;
+    }
+    
+    .btn-cancel {
+        padding: 0.4rem 1rem;
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-cancel:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+    }
+    
+    /* Mentor Card Styles */
+    .mentor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .mentor-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #f0f0f0;
+        transition: all 0.2s;
+    }
+    
+    .mentor-card:hover {
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+    
+    .mentor-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .mentor-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .mentor-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    
+    .mentor-info p {
+        color: #666;
+        font-size: 0.85rem;
+    }
+    
+    .mentor-details {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 8px;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #666;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-item i {
+        color: #667eea;
+        width: 16px;
+    }
+    
+    .skills-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .skill-tag {
+        background: #e8f0fe;
+        color: #667eea;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    
+    .mentor-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-message {
+        flex: 1;
+        text-align: center;
+        padding: 0.6rem;
+        background: #667eea;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-message:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .btn-resources {
+        flex: 1;
+        text-align: center;
+        padding: 0.6rem;
+        background: #f39c12;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-resources:hover {
+        background: #e67e22;
+        transform: translateY(-2px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary:hover {
+        background: #764ba2;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .mentor-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .mentor-actions {
+            flex-direction: column;
+        }
+        
+        .request-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block student_content %}
+<div class="mentorship-container">
+    <!-- Welcome Card -->
+    <div class="welcome-card">
+        <h1>My Mentorship</h1>
+        <p>Track your mentorship requests and active relationships.</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ pending_requests|length if pending_requests else 0 }}</h3>
+                <p>Pending Requests</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="fas fa-chalkboard-user"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ mentors|length if mentors else 0 }}</h3>
+                <p>Active Mentors</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon completed">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ accepted_requests|length if accepted_requests else 0 }}</h3>
+                <p>Accepted</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon requests">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_requests|default(0) }}</h3>
+                <p>Total Requests</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Mentorship Requests Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-clock" style="color: #f39c12;"></i>
+                Pending Requests
+            </h2>
+            <span class="badge">{{ pending_requests|length if pending_requests else 0 }}</span>
+        </div>
+
+        {% if pending_requests and pending_requests|length > 0 %}
+            {% for request in pending_requests %}
+            <div class="request-item">
+                <div class="request-avatar">
+                    {{ request.alumni_name[:2].upper() if request.alumni_name else 'A' }}
+                </div>
+                <div class="request-content">
+                    <div class="request-name">{{ request.alumni_name or 'Alumni' }}</div>
+                    {% if request.message %}
+                    <div class="request-message">
+                        <i class="fas fa-quote-left" style="color: #f39c12; opacity: 0.5;"></i>
+                        {{ request.message }}
+                    </div>
+                    {% endif %}
+                    <div class="request-meta">
+                        <span><i class="far fa-calendar"></i> Sent on {{ request.request_date.strftime('%b %d, %Y') }}</span>
+                        <span><i class="fas fa-clock"></i> Waiting for response</span>
+                    </div>
+                    <div style="margin-top: 0.75rem;">
+                        <span class="request-status">Pending</span>
+                        <button class="btn-cancel" onclick="cancelRequest({{ request.id }})" style="margin-left: 0.5rem;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>No Pending Requests</h3>
+                <p>You don't have any pending mentorship requests.</p>
+                <a href="{{ url_for('student.dashboard') }}" class="btn-primary">
+                    <i class="fas fa-search"></i> Find Mentors
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Mentors Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-chalkboard-user"></i>
+                Your Mentors
+            </h2>
+            <span class="badge">{{ mentors|length if mentors else 0 }}</span>
+        </div>
+
+        {% if mentors and mentors|length > 0 %}
+            <div class="mentor-grid">
+                {% for mentor in mentors %}
+                <div class="mentor-card">
+                    <div class="mentor-header">
+                        <div class="mentor-avatar">
+                            {{ mentor.full_name[:2].upper() }}
+                        </div>
+                        <div class="mentor-info">
+                            <h3>{{ mentor.full_name }}</h3>
+                            <p>{{ mentor.profile.job_title or 'Mentor' }}</p>
+                            <p>{{ mentor.profile.company or 'Company not specified' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mentor-details">
+                        <div class="detail-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Mentor since {{ mentor.connected_since }}</span>
+                        </div>
+                        {% if mentor.profile.industry %}
+                        <div class="detail-item">
+                            <i class="fas fa-industry"></i>
+                            <span>{{ mentor.profile.industry }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if mentor.profile.skills %}
+                    <div class="skills-list">
+                        {% for skill in mentor.profile.skills.split(',')[:3] %}
+                        <span class="skill-tag">{{ skill.strip() }}</span>
+                        {% endfor %}
+                        {% if mentor.profile.skills.split(',')|length > 3 %}
+                        <span class="skill-tag">+{{ mentor.profile.skills.split(',')|length - 3 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mentor-actions">
+                        <a href="{{ url_for('student.start_chat', alumni_id=mentor.id) }}" class="btn-message">
+                            <i class="fas fa-comment"></i> Message
+                        </a>
+                        <a href="{{ url_for('student.mentor_resources', alumni_id=mentor.id) }}" class="btn-resources">
+                            <i class="fas fa-book-open"></i> Resources
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chalkboard-user"></i>
+                <h3>No Active Mentors Yet</h3>
+                <p>Once your mentorship requests are accepted, your mentors will appear here.</p>
+                <a href="{{ url_for('student.dashboard') }}" class="btn-primary">
+                    <i class="fas fa-search"></i> Find Mentors
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Mentorship Tips Card -->
+    <div style="background: linear-gradient(135deg, #f5f7ff 0%, #ffffff 100%); border-radius: 16px; padding: 1.5rem; border: 1px solid #e0e7ff;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 50px; height: 50px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div>
+                <h3 style="color: #2c3e50; margin-bottom: 0.25rem;">Making the Most of Mentorship</h3>
+                <p style="color: #666; font-size: 0.9rem; margin: 0;">
+                    Come prepared with questions, take notes during sessions, and apply what you learn. Your mentor is here to help you grow!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cancelRequest(requestId) {
+        if (confirm('Are you sure you want to cancel this mentorship request?')) {
+            fetch(`/api/mentorship/cancel/${requestId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Request cancelled successfully');
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error cancelling request');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error cancelling request');
+            });
+        }
+    }
+</script>
+{% endblock %}

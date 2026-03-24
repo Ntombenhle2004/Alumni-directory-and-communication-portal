@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #27ae60; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .btn { display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+        .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Payment Received! 💰</h1>
+        </div>
+        <div class="content">
+            <p>Hello <strong>{{ alumni.full_name }}</strong>,</p>
+            <p><strong>{{ student.full_name }}</strong> has successfully completed the payment for mentorship.</p>
+            
+            <p><strong>Payment Details:</strong></p>
+            <ul>
+                <li>💰 Amount Received: R{{ "%.2f"|format(request.payment_amount) }}</li>
+                <li>📅 Payment Date: {{ request.payment_date.strftime('%B %d, %Y') }}</li>
+                <li>🎓 Student: {{ student.full_name }} ({{ student.email }})</li>
+            </ul>
+            
+            <p>You can now start messaging your mentee!</p>
+            
+            <a href="{{ app_url }}/alumni/messages" class="btn">Start Messaging</a>
+        </div>
+        <div class="footer">
+            <p>Alumni Portal | Connecting Students with Mentors</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,41 +1,276 @@
 {% extends "alumni/base_alumni.html" %}
 
+{% block title %}Dashboard - Alumni Portal{% endblock %}
+
 {% block alumni_content %}
+<!-- Welcome Card -->
 <div class="welcome-card">
-    <h1>Welcome back, {{ user.full_name }}!</h1>
+    <h1>Welcome back, {{ user.full_name }}! 👋</h1>
     <p>Here's what's happening with your mentorship activities and network.</p>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Active Mentees</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ active_mentees_count|default(0) }}</div>
+<!-- Mentorship Availability Toggle Card -->
+<div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-handshake" style="color: #667eea;"></i>
+                Mentorship Availability
+            </h3>
+            <p style="color: #666; font-size: 0.9rem;">
+                Control whether students can send you mentorship requests
+            </p>
+        </div>
+        
+        <!-- Toggle Switch -->
+        <label class="switch">
+            <input type="checkbox" id="mentorshipToggle" {% if profile and profile.mentorship_available %}checked{% endif %}>
+            <span class="slider round"></span>
+        </label>
     </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Pending Requests</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ pending_requests|default(0) }}</div>
-    </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Profile Views</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ profile_views|default(0) }}</div>
-    </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="color: #666; font-size: 0.9rem;">Rating</div>
-        <div style="font-size: 2rem; font-weight: bold;">{{ profile.rating_avg|default(0) }} </div>
+    
+    <!-- Status Message -->
+    <div id="mentorshipStatus" style="margin-top: 1rem; padding: 0.75rem; border-radius: 8px; {% if profile and profile.mentorship_available %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}">
+        <i class="fas {% if profile and profile.mentorship_available %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+        You are currently <strong>{% if profile and profile.mentorship_available %}available{% else %}not available{% endif %}</strong> for mentorship requests.
+        {% if not profile or not profile.mentorship_available %}
+        <span style="display: block; font-size: 0.85rem; margin-top: 0.25rem;">Students will not be able to send you mentorship requests.</span>
+        {% endif %}
     </div>
 </div>
 
-<div style="background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <h2 style="margin-bottom: 1rem;">Recent Activity</h2>
-    {% for activity in recent_activities %}
-    <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 1rem;">
-        <i class="fas {{ activity.icon }}" style="color: #667eea;"></i>
-        <div style="flex: 1;">
-            <div style="font-weight: bold;">{{ activity.title }}</div>
-            <div style="color: #666; font-size: 0.9rem;">{{ activity.description }}</div>
+<!-- Stats Cards -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+            <i class="fas fa-users" style="color: #667eea;"></i> Active Mentees
         </div>
-        <div style="color: #999; font-size: 0.85rem;">{{ activity.time }}</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ active_mentees_count|default(0) }}</div>
+        <div style="color: #27ae60; font-size: 0.85rem; margin-top: 0.25rem;">
+            <i class="fas fa-arrow-up"></i> +{{ new_mentees|default(0) }} this month
+        </div>
     </div>
-    {% endfor %}
+    
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+            <i class="fas fa-clock" style="color: #f39c12;"></i> Pending Requests
+        </div>
+        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ pending_requests_count|default(0) }}</div>
+        <div style="color: #f39c12; font-size: 0.85rem; margin-top: 0.25rem;">
+            <i class="fas fa-clock"></i> Awaiting response
+        </div>
+    </div>
+    
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+            <i class="fas fa-eye" style="color: #3498db;"></i> Profile Views
+        </div>
+        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ profile_views|default(0) }}</div>
+        <div style="color: #3498db; font-size: 0.85rem; margin-top: 0.25rem;">
+            <i class="fas fa-arrow-up"></i> +{{ weekly_views|default(0) }} this week
+        </div>
+    </div>
+    
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+            <i class="fas fa-star" style="color: #f1c40f;"></i> Rating
+        </div>
+        <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ profile.rating_avg|default(0) }} ⭐</div>
+        <div style="color: #666; font-size: 0.85rem; margin-top: 0.25rem;">
+            From {{ profile.rating_count|default(0) }} reviews
+        </div>
+    </div>
 </div>
+
+<!-- Pending Mentorship Requests Section -->
+{% if pending_requests and pending_requests|length > 0 %}
+<div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 4px solid #f39c12;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1.3rem;">
+            <i class="fas fa-clock" style="color: #f39c12;"></i>
+            Pending Mentorship Requests ({{ pending_requests|length }})
+        </h2>
+        <a href="{{ url_for('views.alumni_mentorship') }}" style="color: #667eea; text-decoration: none; font-size: 0.9rem;">
+            View All <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    
+    <div style="display: grid; gap: 1rem;">
+        {% for request in pending_requests[:5] %}
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; border: 1px solid #f0f0f0;">
+            <!-- Student Avatar -->
+            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
+                {{ request.student_name[:2].upper() if request.student_name else 'S' }}
+            </div>
+            
+            <!-- Student Info -->
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <h3 style="font-size: 1rem; margin: 0;">{{ request.student_name or 'Student' }}</h3>
+                    {% if request.student_course %}
+                    <span style="background: #e8f0fe; color: #667eea; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem;">
+                        {{ request.student_course }}
+                    </span>
+                    {% endif %}
+                </div>
+                <p style="color: #666; font-size: 0.9rem; margin: 0.25rem 0 0 0;">
+                    <i class="fas fa-calendar"></i> Requested {{ request.request_date.strftime('%b %d, %Y') }}
+                </p>
+                {% if request.message %}
+                <p style="color: #666; font-size: 0.85rem; background: white; padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
+                    <i class="fas fa-comment" style="color: #667eea;"></i> "{{ request.message }}"
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.5rem;">
+                <form action="{{ url_for('mentorship.respond_to_request', request_id=request.id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="accept">
+                    <button type="submit" style="padding: 0.5rem 1rem; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;"
+                            onclick="return confirm('Accept this mentorship request?')">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                </form>
+                <form action="{{ url_for('mentorship.respond_to_request', request_id=request.id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" style="padding: 0.5rem 1rem; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;"
+                            onclick="return confirm('Reject this mentorship request?')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.3rem;">
+        <i class="fas fa-history" style="color: #667eea;"></i>
+        Recent Activity
+    </h2>
+    
+    {% if recent_activities and recent_activities|length > 0 %}
+        <div style="display: grid; gap: 0.5rem;">
+            {% for activity in recent_activities %}
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border-bottom: 1px solid #f0f0f0;">
+                <div style="width: 32px; height: 32px; background: {% if activity.type == 'request' %}#f39c12{% elif activity.type == 'accept' %}#27ae60{% else %}#667eea{% endif %}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                    <i class="fas {{ activity.icon }}" style="font-size: 0.8rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500;">{{ activity.title }}</div>
+                    <div style="color: #666; font-size: 0.85rem;">{{ activity.description }}</div>
+                </div>
+                <div style="color: #999; font-size: 0.8rem;">{{ activity.time }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 2rem;">
+            <i class="fas fa-bell-slash" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+            <p style="color: #666;">No recent activity to show.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- CSS for Toggle Switch -->
+<style>
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+
+    input:checked + .slider {
+        background-color: #27ae60;
+    }
+
+    input:focus + .slider {
+        box-shadow: 0 0 1px #27ae60;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+</style>
+
+<!-- JavaScript for Toggle Switch -->
+<script>
+    document.getElementById('mentorshipToggle').addEventListener('change', function() {
+        const isAvailable = this.checked;
+        const statusDiv = document.getElementById('mentorshipStatus');
+        
+        // Send AJAX request to update status
+        fetch('/profile/toggle-mentorship', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ available: isAvailable })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update status message
+                if (isAvailable) {
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> You are currently <strong>available</strong> for mentorship requests.';
+                } else {
+                    statusDiv.style.background = '#f8d7da';
+                    statusDiv.style.color = '#721c24';
+                    statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> You are currently <strong>not available</strong> for mentorship requests. <span style="display: block; font-size: 0.85rem; margin-top: 0.25rem;">Students will not be able to send you mentorship requests.</span>';
+                }
+                
+                // Optional: Show success message
+                // alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Revert toggle if error
+            this.checked = !isAvailable;
+        });
+    });
+</script>
 {% endblock %}

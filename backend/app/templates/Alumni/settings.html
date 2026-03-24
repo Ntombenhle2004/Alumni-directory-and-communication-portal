@@ -1,0 +1,158 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Settings - Alumni Portal{% endblock %}
+
+{% block alumni_content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; color: #2c3e50; margin-bottom: 2rem;">Settings</h1>
+    
+    <!-- Mentorship Settings Card -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-handshake" style="color: #667eea;"></i>
+            Mentorship Settings
+        </h2>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Mentorship Availability</h3>
+                <p style="color: #666; font-size: 0.9rem;">Allow students to send you mentorship requests</p>
+            </div>
+            
+            <label class="switch">
+                <input type="checkbox" id="mentorshipToggle" {% if profile and profile.mentorship_available %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        
+        <div id="mentorshipStatus" style="margin-top: 1rem; padding: 1rem; border-radius: 8px; {% if profile and profile.mentorship_available %}background: #d4edda; color: #155724;{% else %}background: #f8d7da; color: #721c24;{% endif %}">
+            <i class="fas {% if profile and profile.mentorship_available %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+            You are currently <strong>{% if profile and profile.mentorship_available %}available{% else %}not available{% endif %}</strong> for mentorship.
+        </div>
+    </div>
+    
+    <!-- Profile Settings Card -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-user" style="color: #667eea;"></i>
+            Profile Settings
+        </h2>
+        
+        <form method="POST" action="{{ url_for('profile.update_profile') }}">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Job Title</label>
+                <input type="text" name="job_title" value="{{ profile.job_title or '' }}" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Company</label>
+                <input type="text" name="company" value="{{ profile.company or '' }}" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Industry</label>
+                <input type="text" name="industry" value="{{ profile.industry or '' }}" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Skills (comma separated)</label>
+                <textarea name="skills" rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">{{ profile.skills or '' }}</textarea>
+            </div>
+            
+            <button type="submit" style="background: #667eea; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer;">
+                Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+
+    input:checked + .slider {
+        background-color: #27ae60;
+    }
+
+    input:focus + .slider {
+        box-shadow: 0 0 1px #27ae60;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+</style>
+
+<script>
+    document.getElementById('mentorshipToggle').addEventListener('change', function() {
+        const isAvailable = this.checked;
+        const statusDiv = document.getElementById('mentorshipStatus');
+        
+        fetch('/profile/toggle-mentorship', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ available: isAvailable })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isAvailable) {
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> You are currently <strong>available</strong> for mentorship.';
+                } else {
+                    statusDiv.style.background = '#f8d7da';
+                    statusDiv.style.color = '#721c24';
+                    statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> You are currently <strong>not available</strong> for mentorship.';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.checked = !isAvailable;
+        });
+    });
+</script>
+{% endblock %}

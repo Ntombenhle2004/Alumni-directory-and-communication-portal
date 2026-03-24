@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, session
 from ..config.db import db
-from ..models.user import User, AlumniProfile, StudentProfile, Rating, MentorshipRequest
+from ..models.user import MentorshipSession, SessionResource, User, AlumniProfile, StudentProfile, Rating, MentorshipRequest
 from sqlalchemy import or_
 import math
 from datetime import datetime
@@ -115,7 +115,6 @@ def search_alumni():
 def view_alumni(alumni_id):
     user = get_current_user()
     if not user or user.role != 'student':
-        flash('Please login to view alumni profiles.', 'error')
         return redirect(url_for('views.login_page'))
     
     alumni = User.query.get_or_404(alumni_id)
@@ -125,28 +124,41 @@ def view_alumni(alumni_id):
     
     profile = AlumniProfile.query.filter_by(user_id=alumni_id).first()
     
-   
-    ratings = Rating.query.filter_by(alumni_id=alumni_id).all()
-    avg_rating = sum(r.score for r in ratings) / len(ratings) if ratings else 0
-    
-    
-    user_rating = Rating.query.filter_by(
-        student_id=user.id,
-        alumni_id=alumni_id
+    # Check connection status
+    from ..models.user import ConnectionRequest
+    connection = ConnectionRequest.query.filter(
+        ((ConnectionRequest.sender_id == user.id) & (ConnectionRequest.receiver_id == alumni_id)) |
+        ((ConnectionRequest.sender_id == alumni_id) & (ConnectionRequest.receiver_id == user.id))
     ).first()
     
+    connection_status = 'none'
+    if connection:
+        connection_status = connection.status
+    
+    # Check mentorship request
     mentorship_request = MentorshipRequest.query.filter_by(
         student_id=user.id,
         alumni_id=alumni_id
     ).first()
     
+    print("="*50)
+    print(f"VIEW ALUMNI DEBUG:")
+    print(f"Alumni ID: {alumni_id}")
+    print(f"Student ID: {user.id}")
+    print(f"Connection Status: {connection_status}")
+    print(f"Profile exists: {profile is not None}")
+    if profile:
+        print(f"Mentorship Available: {profile.mentorship_available}")
+    print(f"Mentorship Request: {mentorship_request}")
+    print("="*50)
+    if mentorship_request:
+        print(f"Mentorship Request Status: {mentorship_request.status}")
+    
     return render_template("student/view_alumni.html",
                          user=user,
                          alumni=alumni,
                          profile=profile,
-                         ratings=ratings,
-                         avg_rating=avg_rating,
-                         user_rating=user_rating,
+                         connection_status=connection_status,
                          mentorship_request=mentorship_request)
 
 @student_bp.route("/alumni/<int:alumni_id>/rate", methods=['POST'])
@@ -215,20 +227,6 @@ def request_mentorship(alumni_id):
     
     return redirect(url_for('student.view_alumni', alumni_id=alumni_id))
 
-@student_bp.route("/my-mentors")
-def my_mentors():
-    user = get_current_user()
-    if not user or user.role != 'student':
-        return redirect(url_for('views.login_page'))
-    
-    mentorships = MentorshipRequest.query.filter_by(
-        student_id=user.id,
-        status='accepted'
-    ).all()
-    
-    return render_template("student/my_mentors.html",
-                         user=user,
-                         mentorships=mentorships)
 
 @student_bp.route("/mentorship-requests")
 def mentorship_requests():
@@ -399,3 +397,255 @@ def settings():
         return redirect(url_for('views.login_page'))
     
     return render_template("student/settings.html", user=user)
+
+@student_bp.route("/notifications")
+def student_notifications():
+    """Render student notifications page"""
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    from ..models.user import Notification
+    
+    # Get all notifications for this student
+    notifications = Notification.query.filter_by(
+        user_id=user.id,
+        is_archived=False
+    ).order_by(Notification.created_at.desc()).all()
+    
+    # Add sender info
+    for n in notifications:
+        if n.sender_id:
+            n.sender = User.query.get(n.sender_id)
+    
+    return render_template("student/notifications.html",
+                         user=user,
+                         notifications=notifications)
+
+@student_bp.route("/my-mentors")
+def my_mentors():
+    """Show all accepted mentors for the student"""
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    from ..models.user import MentorshipRequest, User, AlumniProfile
+    
+    # Get all accepted mentorship requests
+    # For now, don't filter by payment_status to debug
+    mentorship_requests = MentorshipRequest.query.filter_by(
+        student_id=user.id,
+        status='accepted'
+    ).order_by(MentorshipRequest.request_date.desc()).all()
+
+    pending_requests = MentorshipRequest.query.filter_by(
+        student_id=user.id,
+        status='pending'
+    ).order_by(MentorshipRequest.request_date.desc()).all()
+    
+    print(f"Found {len(mentorship_requests)} accepted mentorship requests")
+
+    from datetime import datetime
+    upcoming_sessions = []
+    for req in mentorship_requests:
+        sessions = MentorshipSession.query.filter_by(
+            mentorship_request_id=req.id,
+            status='scheduled'
+        ).filter(MentorshipSession.session_date >= datetime.utcnow()).order_by(MentorshipSession.session_date.asc()).all()
+        
+        for session in sessions:
+            alumni = User.query.get(req.alumni_id)
+            upcoming_sessions.append({
+                'id': session.id,
+                'title': session.title,
+                'mentor_name': alumni.full_name if alumni else 'Mentor',
+                'session_date': session.session_date,
+                'duration_minutes': session.duration_minutes,
+                'meeting_link': session.meeting_link,
+                'location': session.location
+            })
+    
+    mentors = []
+    for req in mentorship_requests:
+        print(f"Request {req.id}: status={req.status}, payment={req.payment_status}")
+        alumni = User.query.get(req.alumni_id)
+        if alumni:
+            profile = AlumniProfile.query.filter_by(user_id=alumni.id).first()
+            alumni.profile = profile
+            alumni.connected_since = req.response_date.strftime('%b %Y') if req.response_date else 'Recently'
+            mentors.append(alumni)
+    
+    return render_template("student/my_mentors.html", user=user, mentors=mentors, upcoming_sessions_list=upcoming_sessions[:5], pending_requests=pending_requests)
+
+# In student_routes.py, add this temporary debug route
+@student_bp.route("/debug-mentors")
+def debug_mentors():
+    user = get_current_user()
+    if not user:
+        return "Not logged in"
+    
+    from ..models.user import MentorshipRequest
+    
+    requests = MentorshipRequest.query.filter_by(student_id=user.id).all()
+    
+    result = []
+    for req in requests:
+        result.append({
+            'id': req.id,
+            'alumni_id': req.alumni_id,
+            'status': req.status,
+            'payment_status': req.payment_status,
+            'request_date': str(req.request_date),
+            'response_date': str(req.response_date)
+        })
+    
+    return result
+
+@student_bp.route("/start-chat/<int:alumni_id>")
+def start_chat(alumni_id):
+    """Start a new chat with a mentor"""
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    # Check if the user is connected (has an accepted and paid mentorship)
+    from ..models.user import MentorshipRequest
+    
+    mentorship = MentorshipRequest.query.filter_by(
+        student_id=user.id,
+        alumni_id=alumni_id,
+        status='accepted',
+        payment_status='paid'
+    ).first()
+    
+    if not mentorship:
+        flash('You can only message your active mentors.', 'error')
+        return redirect(url_for('student.my_mentors'))
+    
+    # Use the existing chat service to start conversation
+    from ..services.chat_service import start_conversation_logic
+    
+    conv, error = start_conversation_logic({
+        'student_id': user.id,
+        'alumni_id': alumni_id
+    })
+    
+    if error:
+        flash('Error starting conversation: ' + error, 'error')
+        return redirect(url_for('student.my_mentors'))
+    
+    # Redirect to the chat page
+    return redirect(url_for('student.chat', conversation_id=conv.id))
+
+@student_bp.route("/chat/<int:conversation_id>")
+def chat(conversation_id):
+    """View a specific conversation"""
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    from ..models.user import Conversation, Message
+    
+    conversation = Conversation.query.get_or_404(conversation_id)
+    
+    # Check if the user is part of this conversation
+    if conversation.student_id != user.id and conversation.alumni_id != user.id:
+        flash('You do not have access to this conversation.', 'error')
+        return redirect(url_for('student.dashboard'))
+    
+    # Mark messages as read
+    messages = Message.query.filter_by(
+        conversation_id=conversation_id,
+        is_read=False
+    ).all()
+    
+    for msg in messages:
+        if msg.sender_id != user.id:
+            msg.is_read = True
+    db.session.commit()
+    
+    return render_template("student/chat.html", user=user, conversation_id=conversation_id)
+
+@student_bp.route("/mentor-resources/<int:alumni_id>")
+def mentor_resources(alumni_id):
+    """View resources shared by a mentor"""
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    # Check if this is an active mentor
+    from ..models.user import MentorshipRequest, MentorResource, User, AlumniProfile
+    
+    mentorship = MentorshipRequest.query.filter_by(
+        student_id=user.id,
+        alumni_id=alumni_id,
+        status='accepted',
+        payment_status='paid'
+    ).first()
+    
+    if not mentorship:
+        flash('You can only view resources from your active mentors.', 'error')
+        return redirect(url_for('student.my_mentors'))
+    
+    # Get mentor details
+    mentor = User.query.get(alumni_id)
+    profile = AlumniProfile.query.filter_by(user_id=alumni_id).first()
+
+    sessions = MentorshipSession.query.filter_by(
+        mentorship_request_id=mentorship.id
+    ).order_by(MentorshipSession.session_date.desc()).all()
+    
+    
+    # Get resources from this mentor
+    resources = MentorResource.query.filter_by(
+        alumni_id=alumni_id,
+        is_public=True
+    ).order_by(MentorResource.created_at.desc()).all()
+
+    
+    all_session_resources = []
+    sessions_with_resources = []
+    
+    for session in sessions:
+        resources = SessionResource.query.filter_by(session_id=session.id).all()
+        if resources:
+            session.resources = resources
+            sessions_with_resources.append(session)
+            all_session_resources.extend(resources)
+
+    general_resources = []
+    
+    return render_template("student/mentor_resources.html", 
+                         user=user, 
+                         mentor=mentor, 
+                         profile=profile,
+                         resources=resources,
+                         sessions_with_resources=sessions_with_resources,
+                         general_resources=general_resources,
+                         resources_count=len(all_session_resources),
+                         sessions_count=len(sessions_with_resources))
+
+@student_bp.route("/view-session/<int:session_id>")
+def view_session(session_id):
+    """View session details for students"""
+    user = get_current_user()
+    if not user or user.role != 'student':
+        return redirect(url_for('views.login_page'))
+    
+    from ..models.user import MentorshipSession, SessionResource, MentorshipRequest
+    
+    session = MentorshipSession.query.get_or_404(session_id)
+    mentorship = MentorshipRequest.query.get(session.mentorship_request_id)
+    
+    # Check if this session belongs to the student
+    if mentorship.student_id != user.id:
+        flash('You do not have access to this session.', 'error')
+        return redirect(url_for('student.my_mentors'))
+    
+    resources = SessionResource.query.filter_by(session_id=session_id).all()
+    
+    return render_template("student/view_session.html", 
+                         user=user, 
+                         session=session, 
+                         resources=resources,
+                         mentorship=mentorship)

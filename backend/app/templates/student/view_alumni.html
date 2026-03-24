@@ -2,8 +2,239 @@
 
 {% block title %}{{ alumni.full_name }} - Alumni Profile{% endblock %}
 
+{% block extra_css %}
+{{ super() }}
+<style>
+    .action-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        position: sticky;
+        top: 2rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .badge-connected {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .badge-pending {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    
+    .badge-none {
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dde0e3;
+    }
+    
+    .badge-available {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .badge-unavailable {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-weight: 600;
+    }
+    
+    .step.active .step-number {
+        background: #667eea;
+        color: white;
+    }
+    
+    .step.completed .step-number {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .step-line {
+        position: absolute;
+        top: 20px;
+        right: -50%;
+        width: 100%;
+        height: 2px;
+        background: #e9ecef;
+        z-index: -1;
+    }
+    
+    .step:last-child .step-line {
+        display: none;
+    }
+    
+    .btn-connection {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-connect {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-connect:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .btn-pending {
+        background: #f39c12;
+        color: white;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .btn-mentorship {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-mentorship-available {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-mentorship-available:hover {
+        background: #219a52;
+        transform: translateY(-2px);
+    }
+    
+    .btn-payment {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        background: white;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        font-weight: 500;
+        margin: 0 0.5rem;
+    }
+    
+    .btn-payment:hover {
+        border-color: #27ae60;
+        background: #f0fff4;
+        transform: translateY(-2px);
+    }
+    
+    .status-message {
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-accepted {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+        border: 2px solid #27ae60;
+    }
+    
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-unavailable {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .btn-message {
+        display: inline-block;
+        padding: 0.6rem 1.5rem;
+        background: #667eea;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-message:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+    
+    .message-input {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        resize: vertical;
+    }
+    
+    .message-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
 {% block student_content %}
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="{{ url_for('student.dashboard') }}" style="color: #667eea; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -11,34 +242,38 @@
 </div>
 
 <!-- Alumni Profile Header -->
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem; color: white; position: relative; overflow: hidden;">
-    <div style="position: relative; z-index: 2;">
-        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-            <!-- Profile Picture -->
-            <div style="width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.3);">
-                <div style="width: 110px; height: 110px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; font-weight: bold;">
-                    {{ alumni.full_name[:2].upper() }}
-                </div>
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem; color: white;">
+    <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+        <!-- Profile Picture -->
+        <div style="width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.3);">
+            <div style="width: 110px; height: 110px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; font-weight: bold;">
+                {{ alumni.full_name[:2].upper() }}
             </div>
-            
-            <!-- Basic Info -->
-            <div style="flex: 1;">
-                <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ alumni.full_name }}</h1>
-                {% if profile %}
-                    <p style="font-size: 1.2rem; opacity: 0.95; margin-bottom: 0.5rem;">
-                        <i class="fas fa-briefcase"></i> {{ profile.job_title or 'Professional' }}
-                    </p>
-                    <p style="font-size: 1.1rem; opacity: 0.9;">
-                        <i class="fas fa-building"></i> {{ profile.company or 'Company not specified' }}
-                    </p>
-                {% endif %}
-            </div>
-            
-            <!-- Mentorship Status Badge -->
+        </div>
+        
+        <!-- Basic Info -->
+        <div style="flex: 1;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ alumni.full_name }}</h1>
+            {% if profile %}
+                <p style="font-size: 1.2rem; opacity: 0.95; margin-bottom: 0.5rem;">
+                    <i class="fas fa-briefcase"></i> {{ profile.job_title or 'Professional' }}
+                </p>
+                <p style="font-size: 1.1rem; opacity: 0.9;">
+                    <i class="fas fa-building"></i> {{ profile.company or 'Company not specified' }}
+                </p>
+            {% endif %}
+        </div>
+        
+        <!-- Mentorship Status Badge -->
+        <div>
             {% if profile and profile.mentorship_available %}
-            <div style="background: rgba(255,255,255,0.2); padding: 0.75rem 1.5rem; border-radius: 40px; border: 2px solid white;">
-                <i class="fas fa-check-circle"></i> Available for Mentorship
-            </div>
+                <span class="status-badge badge-available">
+                    <i class="fas fa-check-circle"></i> Available for Mentorship
+                </span>
+            {% else %}
+                <span class="status-badge badge-unavailable">
+                    <i class="fas fa-times-circle"></i> Not Available for Mentorship
+                </span>
             {% endif %}
         </div>
     </div>
@@ -94,149 +329,145 @@
         {% endif %}
     </div>
     
-    <!-- Right Column - Actions & Stats -->
+    <!-- Right Column - Mentorship Action -->
     <div>
-        <!-- Mentorship Request Card -->
-        <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 2rem;">
+        <div class="action-card">
             <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-handshake" style="color: #667eea;"></i> Mentorship
+                <i class="fas fa-handshake" style="color: #667eea;"></i> Mentorship Action
             </h2>
-            
-            {% if mentorship_request %}
-                <!-- Existing Request Status -->
-                <div style="text-align: center; padding: 1rem;">
-                    {% if mentorship_request.status.lower() == 'pending' %}
-                        <div style="background: #f39c12; color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-                            <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <h3 style="margin-bottom: 0.5rem;">Request Pending</h3>
-                            <p style="opacity: 0.9;">Your mentorship request is waiting for {{ alumni.full_name }}'s response.</p>
-                            <p style="font-size: 0.9rem; margin-top: 1rem;">Sent on {{ mentorship_request.request_date.strftime('%b %d, %Y') }}</p>
-                        </div>
-                        <form action="{{ url_for('student.cancel_mentorship_request', request_id=mentorship_request.id) }}" method="POST">
-                            <button type="submit" style="width: 100%; padding: 0.8rem; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="return confirm('Are you sure you want to cancel this request?')">
-                                <i class="fas fa-times"></i> Cancel Request
-                            </button>
-                        </form>
-                        
-                    {% elif mentorship_request.status.lower() == 'accepted' %}
-                        <div style="background: #27ae60; color: white; padding: 1.5rem; border-radius: 12px;">
-                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <h3 style="margin-bottom: 0.5rem;">You're Connected!</h3>
-                            <p style="opacity: 0.9;">{{ alumni.full_name }} has accepted your mentorship request.</p>
-                            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                                <a href="{{ url_for('student.messages') }}" style="flex: 1; padding: 0.8rem; background: white; color: #27ae60; border-radius: 8px; text-decoration: none; font-weight: 500;">
-                                    <i class="fas fa-comment"></i> Message
-                                </a>
-                                <a href="#" style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.2); color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
-                                    <i class="fas fa-calendar"></i> Schedule
-                                </a>
-                            </div>
-                        </div>
-                        
-                    {% elif mentorship_request.status.lower() == 'rejected' %}
-                        <div style="background: #e74c3c; color: white; padding: 1.5rem; border-radius: 12px;">
-                            <i class="fas fa-times-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <h3 style="margin-bottom: 0.5rem;">Request Declined</h3>
-                            <p style="opacity: 0.9;">{{ alumni.full_name }} is not available for mentorship at this time.</p>
-                            <p style="font-size: 0.9rem; margin-top: 1rem;">You can try reaching out to other alumni.</p>
-                        </div>
-                    {% endif %}
-                </div>
-                
-            {% else %}
-                <!-- Send New Request Form -->
+
+            {% if not mentorship_request %}
+                <!-- No request sent yet -->
                 {% if profile and profile.mentorship_available %}
-                    <form action="{{ url_for('student.request_mentorship', alumni_id=alumni.id) }}" method="POST">
-                        <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50;">
-                                Why do you want {{ alumni.full_name }} as your mentor?
-                            </label>
-                            <textarea name="message" rows="4" placeholder="Tell them about your goals, what you hope to learn, and why you're interested in their guidance..." 
-                                      style="width: 100%; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 0.95rem; resize: vertical;"
-                                      required></textarea>
-                            <p style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">
-                                <i class="fas fa-info-circle"></i> A personalized message increases your chances of acceptance.
-                            </p>
-                        </div>
-                        
-                        <button type="submit" style="width: 100%; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                                onmouseover="this.style.background='#764ba2'" onmouseout="this.style.background='#667eea'">
-                            <i class="fas fa-paper-plane"></i> Send Mentorship Request
+                    <button class="btn-mentorship btn-mentorship-available" onclick="showMentorshipForm()">
+                        <i class="fas fa-graduation-cap"></i> Request Mentorship
+                    </button>
+                    <div id="mentorshipForm" style="display: none; margin-top: 1rem;">
+                        <textarea id="mentorshipMessage" class="message-input" rows="3" placeholder="Why do you want this mentor?"></textarea>
+                        <button class="btn-mentorship btn-mentorship-available" onclick="sendMentorshipRequest({{ alumni.id }})">
+                            <i class="fas fa-paper-plane"></i> Send Request
                         </button>
-                    </form>
+                    </div>
                 {% else %}
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 2rem; text-align: center;">
-                        <i class="fas fa-ban" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
-                        <h3 style="color: #666; margin-bottom: 0.5rem;">Not Available for Mentorship</h3>
-                        <p style="color: #999;">{{ alumni.full_name }} is currently not accepting new mentorship requests.</p>
+                    <div class="status-message status-unavailable">
+                        <i class="fas fa-times-circle"></i> Not Available for Mentorship
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">This mentor is currently not accepting requests.</p>
                     </div>
                 {% endif %}
-            {% endif %}
-        </div>
-        
-        <!-- Stats Card -->
-        <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-chart-bar" style="color: #667eea;"></i> Stats
-            </h2>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center;">
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ profile.rating_count or 0 }}</div>
-                    <div style="color: #666; font-size: 0.9rem;">Reviews</div>
+
+            {% elif mentorship_request.status == 'pending' %}
+                <div class="status-message status-pending">
+                    <i class="fas fa-clock"></i> Request Pending
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Waiting for {{ alumni.full_name.split()[0] }} to respond.</p>
                 </div>
-                
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">
-                         {{ "%.1f"|format(avg_rating or 0) }}
+
+            {% elif mentorship_request.status == 'accepted' %}
+                {% if mentorship_request.payment_status == 'unpaid' %}
+                    <div class="status-message status-accepted">
+                        <i class="fas fa-check-circle"></i> Request Accepted!
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Select a payment plan to start mentorship:</p>
+                        
+                        <div style="display: flex; gap: 1rem; margin: 1rem 0;">
+                            <button class="btn-payment" onclick="initiatePayment({{ mentorship_request.id }}, 'monthly', 25000)">
+                                <i class="fas fa-calendar-month"></i> Monthly<br>
+                                <strong>R250</strong><span style="font-size: 0.8rem;">/month</span>
+                            </button>
+                            <button class="btn-payment" onclick="initiatePayment({{ mentorship_request.id }}, 'semester', 125000)">
+                                <i class="fas fa-calendar-alt"></i> Semester<br>
+                                <strong>R1250</strong><span style="font-size: 0.8rem;">/5 months</span>
+                            </button>
+                        </div>
                     </div>
-                    <div style="color: #666; font-size: 0.9rem;">Average Rating</div>
+                {% elif mentorship_request.payment_status == 'paid' %}
+                    <div class="status-message status-active">
+                        <i class="fas fa-check-circle"></i> Mentorship Active!
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">You are now being mentored by {{ alumni.full_name.split()[0] }}.</p>
+                        <a href="{{ url_for('student.start_chat', alumni_id=alumni.id) }}" class="btn-message" style="display: inline-block; margin-top: 1rem;">
+                            <i class="fas fa-comment"></i> Start Messaging
+                        </a>
+                    </div>
+                {% endif %}
+
+            {% elif mentorship_request.status == 'rejected' %}
+                <div class="status-message status-rejected">
+                    <i class="fas fa-times-circle"></i> Request Declined
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">{{ alumni.full_name.split()[0] }} is not available for mentorship at this time.</p>
                 </div>
-                
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ profile.mentee_count or 0 }}</div>
-                    <div style="color: #666; font-size: 0.9rem;">Current Mentees</div>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">{{ profile.years_experience or 0 }}+</div>
-                    <div style="color: #666; font-size: 0.9rem;">Years Experience</div>
-                </div>
-            </div>
+            {% endif %}
+
+            <!-- Help Text -->
+            <p style="color: #666; font-size: 0.85rem; text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
+                <i class="fas fa-info-circle" style="color: #667eea;"></i>
+                Once accepted, choose a payment plan to start your mentorship journey.
+            </p>
         </div>
     </div>
 </div>
 
-<!-- Reviews Section -->
-{% if ratings %}
-<div style="margin-top: 2rem; background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="fas fa-star" style="color: #f1c40f;"></i> Reviews ({{ ratings|length }})
-    </h2>
+<script>
+    function showMentorshipForm() {
+        document.getElementById('mentorshipForm').style.display = 'block';
+    }
     
-    <div style="display: grid; gap: 1.5rem;">
-        {% for rating in ratings %}
-        <div style="border-bottom: 1px solid #f0f0f0; padding-bottom: 1.5rem;">
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
-                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                    {{ rating.student_name[:2].upper() if rating.student_name else 'S' }}
-                </div>
-                <div>
-                    <strong>{{ rating.student_name or 'Student' }}</strong>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="color: #f1c40f;">
-                            {% for i in range(rating.score) %}{% endfor %}
-                        </span>
-                        <span style="color: #999; font-size: 0.85rem;">{{ rating.created_at.strftime('%b %d, %Y') }}</span>
-                    </div>
-                </div>
-            </div>
-            {% if rating.comment %}
-            <p style="color: #666; margin-left: 3rem;">{{ rating.comment }}</p>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
+    function sendMentorshipRequest(alumniId) {
+        const message = document.getElementById('mentorshipMessage').value;
+        
+        if (!message.trim()) {
+            alert('Please tell why you want this mentor.');
+            return;
+        }
+        
+        fetch(`/api/mentorship/request/${alumniId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Mentorship request sent successfully!');
+                location.reload();
+            } else {
+                alert(data.error || 'Error sending request');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sending request');
+        });
+    }
+    
+    function initiatePayment(requestId, plan, amount) {
+    const buttons = document.querySelectorAll('.btn-payment');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Use the correct URL - no extra /payment
+    fetch(`/api/mentorship/initiate/${requestId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            amount: amount,
+            plan: plan 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.authorization_url) {
+            window.location.href = data.authorization_url;
+        } else {
+            alert(data.error || 'Payment initiation failed');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error initiating payment');
+        buttons.forEach(btn => btn.disabled = false);
+    });
+}
+</script>
 {% endblock %}

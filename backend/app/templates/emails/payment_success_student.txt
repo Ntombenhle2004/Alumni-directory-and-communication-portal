@@ -1,0 +1,17 @@
+Payment Successful! 🎉
+
+Hello {{ student.full_name }},
+
+Your payment for mentorship with {{ alumni.full_name }} has been successfully processed.
+
+Mentorship Details:
+- Amount Paid: R{{ "%.2f"|format(request.payment_amount) }}
+- Payment Date: {{ request.payment_date.strftime('%B %d, %Y') }}
+- Mentor: {{ alumni.full_name }}
+
+You can now start messaging your mentor!
+
+Visit: {{ app_url }}/student/messages
+
+---
+Alumni Portal | Connecting Students with Mentors

@@ -213,3 +213,61 @@ def edit_student_profile():
     return render_template("student/edit_profile.html", 
                          user=user, 
                          profile_data=profile_data)
+
+@profile_bp.route('/toggle-mentorship', methods=['POST'])
+def toggle_mentorship():
+    """Toggle mentorship availability for alumni"""
+    user = get_current_user()
+    if not user or user.role != 'alumni':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.get_json()
+    available = data.get('available', True)
+    
+    # Get or create alumni profile
+    from ..models.user import AlumniProfile
+    profile = AlumniProfile.query.filter_by(user_id=user.id).first()
+    
+    if not profile:
+        profile = AlumniProfile(user_id=user.id)
+        db.session.add(profile)
+    
+    profile.mentorship_available = available
+    db.session.commit()
+    
+    status = "available" if available else "not available"
+    return jsonify({
+        'success': True,
+        'message': f'You are now {status} for mentorship',
+        'mentorship_available': profile.mentorship_available
+    })
+
+@profile_bp.route('/mentorship-status', methods=['GET'])
+def get_mentorship_status():
+    """Get current mentorship availability status"""
+    user = get_current_user()
+    if not user or user.role != 'alumni':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    from ..models.user import AlumniProfile
+    profile = AlumniProfile.query.filter_by(user_id=user.id).first()
+    
+    return jsonify({
+        'mentorship_available': profile.mentorship_available if profile else True
+    })
+
+@profile_bp.route("/alumni/settings", methods=['GET'])
+def alumni_settings():
+    """Render alumni settings page"""
+    user = get_current_user()
+    if not user or user.role != 'alumni':
+        flash('Please login as an alumni to view settings.', 'error')
+        return redirect(url_for('views.login_page'))
+    
+    # Get alumni profile
+    from ..models.user import AlumniProfile
+    profile = AlumniProfile.query.filter_by(user_id=user.id).first()
+    
+    return render_template("alumni/settings.html", 
+                         user=user, 
+                         profile=profile)

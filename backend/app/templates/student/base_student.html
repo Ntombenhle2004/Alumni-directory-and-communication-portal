@@ -107,9 +107,16 @@
         <a href="{{ url_for('profile_module.student_profile_view') }}" class="{% if request.endpoint == 'profile_module.student_profile_view' %}active{% endif %}">
         <i class="fas fa-user"></i> My Profile
     </a>
-        <a href="{{ url_for('student.my_mentors') }}" class="{% if request.endpoint == 'student.my_mentors' %}active{% endif %}">
-            <i class="fas fa-handshake"></i> My Mentors
-        </a>
+
+    <a href="{{ url_for('student.student_notifications') }}" class="{% if request.endpoint == 'student.student_notifications' %}active{% endif %}">
+    <i class="fas fa-bell"></i> Notifications
+    {% if unread_notifications_count and unread_notifications_count > 0 %}
+        <span class="badge">{{ unread_notifications_count }}</span>
+    {% endif %}
+</a>
+       <a href="{{ url_for('student.my_mentors') }}" class="{% if request.endpoint == 'student.my_mentors' %}active{% endif %}">
+        <i class="fas fa-chalkboard-user"></i> My Mentors
+    </a>
         <a href="{{ url_for('student.mentorship_requests') }}" class="{% if request.endpoint == 'student.mentorship_requests' %}active{% endif %}">
             <i class="fas fa-clock"></i> Mentorship Requests
             {% if pending_requests_count and pending_requests_count > 0 %}

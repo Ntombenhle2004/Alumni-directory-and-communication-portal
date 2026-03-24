@@ -1,0 +1,169 @@
+{% extends "alumni/base_alumni.html" %}
+
+{% block title %}Alumni Directory - Alumni Portal{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .directory-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .alumni-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .alumni-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: all 0.2s;
+    }
+    
+    .alumni-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+    
+    .alumni-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .alumni-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .alumni-title {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    
+    .connection-status {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        margin-top: 0.5rem;
+    }
+    
+    .status-connected {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-none {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    
+    .btn-connect {
+        width: 100%;
+        margin-top: 1rem;
+        padding: 0.5rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    
+    .btn-connect:hover {
+        background: #764ba2;
+    }
+    
+    .btn-connect.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block alumni_content %}
+<div class="directory-container">
+    <h1 style="margin-bottom: 1.5rem;">Alumni Directory</h1>
+    
+    <div class="alumni-grid">
+        {% for alumni in alumni %}
+            {% if alumni.id != user.id %}
+            <div class="alumni-card">
+                <div class="alumni-avatar">{{ alumni.full_name[:2].upper() }}</div>
+                <div class="alumni-name">{{ alumni.full_name }}</div>
+                <div class="alumni-title">
+                    {{ alumni.alumni_profile.job_title if alumni.alumni_profile else 'Alumni' }}
+                    {% if alumni.alumni_profile and alumni.alumni_profile.company %}
+                        at {{ alumni.alumni_profile.company }}
+                    {% endif %}
+                </div>
+                
+                <div class="connection-status 
+                    {% if alumni.connection_status == 'accepted' %}status-connected
+                    {% elif alumni.connection_status == 'pending' %}status-pending
+                    {% else %}status-none{% endif %}">
+                    {% if alumni.connection_status == 'accepted' %}
+                        ✓ Connected
+                    {% elif alumni.connection_status == 'pending' %}
+                        ⏳ Request Pending
+                    {% else %}
+                        Not Connected
+                    {% endif %}
+                </div>
+                
+                {% if alumni.connection_status == 'none' %}
+                    <button class="btn-connect" onclick="sendConnectionRequest({{ alumni.id }})">
+                        Connect
+                    </button>
+                {% elif alumni.connection_status == 'accepted' %}
+                    <button class="btn-connect" onclick="startChat({{ alumni.id }})">
+                        Message
+                    </button>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function sendConnectionRequest(userId) {
+    fetch(`/network/connect/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Connection request sent!');
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+function startChat(userId) {
+    window.location.href = `/alumni/start-chat/${userId}`;
+}
+</script>
+{% endblock %}

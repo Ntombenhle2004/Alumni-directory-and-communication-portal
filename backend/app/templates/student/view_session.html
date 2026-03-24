@@ -1,0 +1,216 @@
+{% extends "student/base_student.html" %}
+
+{% block title %}{{ session.title }} - Session Details{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .session-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .session-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+    }
+    
+    .session-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .meta-item {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .resource-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .resource-item:hover {
+        background: #e8f0fe;
+        transform: translateX(5px);
+    }
+    
+    .resource-icon {
+        width: 40px;
+        height: 40px;
+        background: #667eea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .resource-content {
+        flex: 1;
+    }
+    
+    .resource-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .resource-description {
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .btn-download {
+        padding: 0.4rem 1rem;
+        background: #667eea;
+        color: white;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+    
+    .btn-download:hover {
+        background: #764ba2;
+    }
+    
+    .join-btn {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        background: #27ae60;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .status-scheduled { background: #f39c12; color: white; }
+    .status-completed { background: #27ae60; color: white; }
+    .status-cancelled { background: #e74c3c; color: white; }
+    
+    .btn-back {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #f0f0f0;
+        color: #2c3e50;
+        border-radius: 6px;
+        text-decoration: none;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-back:hover {
+        background: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block student_content %}
+<a href="{{ url_for('student.my_mentors') }}" class="btn-back">
+    <i class="fas fa-arrow-left"></i> Back to My Mentors
+</a>
+
+<div class="session-container">
+    <div class="session-header">
+        <h1>{{ session.title }}</h1>
+        <p>{{ session.description }}</p>
+        <div class="session-meta">
+            <span class="meta-item"><i class="far fa-calendar"></i> {{ session.session_date.strftime('%A, %B %d, %Y') }}</span>
+            <span class="meta-item"><i class="far fa-clock"></i> {{ session.session_date.strftime('%I:%M %p') }} ({{ session.duration_minutes }} min)</span>
+            {% if session.meeting_platform %}
+            <span class="meta-item"><i class="fas fa-video"></i> {{ session.meeting_platform|title }}</span>
+            {% endif %}
+            <span class="status-badge status-{{ session.status }}">{{ session.status|title }}</span>
+        </div>
+    </div>
+    
+    {% if session.meeting_link %}
+    <div class="section-card" style="text-align: center;">
+        <a href="{{ session.meeting_link }}" target="_blank" class="join-btn">
+            <i class="fas fa-video"></i> Join Meeting
+        </a>
+    </div>
+    {% endif %}
+    
+    {% if session.location %}
+    <div class="section-card">
+        <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+        <p>{{ session.location }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Resources Section -->
+    <div class="section-card">
+        <h3><i class="fas fa-paperclip"></i> Session Resources</h3>
+        {% if resources %}
+            {% for resource in resources %}
+            <div class="resource-item">
+                <div class="resource-icon">
+                    {% if resource.resource_type == 'document' %}
+                        <i class="fas fa-file-alt"></i>
+                    {% elif resource.resource_type == 'video' %}
+                        <i class="fas fa-video"></i>
+                    {% elif resource.resource_type == 'link' %}
+                        <i class="fas fa-link"></i>
+                    {% elif resource.resource_type == 'assignment' %}
+                        <i class="fas fa-tasks"></i>
+                    {% endif %}
+                </div>
+                <div class="resource-content">
+                    <div class="resource-title">{{ resource.title }}</div>
+                    <div class="resource-description">{{ resource.description }}</div>
+                </div>
+                {% if resource.file_path %}
+                    <a href="{{ resource.file_path }}" class="btn-download" target="_blank">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                {% elif resource.external_link %}
+                    <a href="{{ resource.external_link }}" class="btn-download" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Open
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #666; text-align: center; padding: 2rem;">No resources added for this session yet.</p>
+        {% endif %}
+    </div>
+    
+    <div style="display: flex; gap: 1rem;">
+        <a href="{{ url_for('student.start_chat', alumni_id=mentorship.alumni_id) }}" class="btn-download" style="background: #667eea; text-decoration: none;">
+            <i class="fas fa-comment"></i> Message Mentor
+        </a>
+        <a href="{{ url_for('student.mentor_resources', alumni_id=mentorship.alumni_id) }}" class="btn-download" style="background: #f39c12; text-decoration: none;">
+            <i class="fas fa-book-open"></i> All Resources
+        </a>
+    </div>
+</div>
+{% endblock %}

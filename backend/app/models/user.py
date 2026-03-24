@@ -44,12 +44,12 @@ class MentorshipRequest(db.Model):
     request_date = db.Column(db.DateTime, default=datetime.utcnow)  
     student = db.relationship('User', foreign_keys=[student_id], backref='sent_mentorship_requests')
     alumni = db.relationship('User', foreign_keys=[alumni_id], backref='received_mentorship_requests') 
-    payment_status = db.Column(db.String(20), default='unpaid')  # unpaid, pending, paid, failed
+    payment_status = db.Column(db.String(20), default='unpaid')  
     payment_amount = db.Column(db.Float, default=0.0)
     payment_date = db.Column(db.DateTime, nullable=True)
     payment_method = db.Column(db.String(50), nullable=True)
     payment_transaction_id = db.Column(db.String(100), nullable=True)
-    response_date = db.Column(db.DateTime, nullable=True)  # Add this field
+    response_date = db.Column(db.DateTime, nullable=True)  
     response_message = db.Column(db.Text, nullable=True)
     
     
@@ -106,7 +106,7 @@ class Subscription(db.Model):
 class Rating(db.Model):
     __tablename__ = 'ratings'
     id = db.Column(db.Integer, primary_key=True)
-    # Move ondelete inside the ForeignKey()
+ 
     student_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     alumni_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     score = db.Column(db.Integer, nullable=False)
@@ -119,10 +119,10 @@ class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    content_type = db.Column(db.String(50))  # 'post', 'comment', 'message', 'profile'
+    content_type = db.Column(db.String(50))  
     content_id = db.Column(db.Integer)
     reason = db.Column(db.Text)
-    status = db.Column(db.String(20), default='pending')  # pending, reviewed, resolved, dismissed
+    status = db.Column(db.String(20), default='pending')  
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     resolved_at = db.Column(db.DateTime)
     resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -144,24 +144,16 @@ class Notification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     
-    # Notification content
+   
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    notification_type = db.Column(db.String(50), nullable=False)  # message, mentorship_request, mentorship_response, event_reminder, etc.
-    
-    # Reference to related entities
+    notification_type = db.Column(db.String(50), nullable=False)  
     reference_id = db.Column(db.Integer, nullable=True)
     reference_type = db.Column(db.String(50), nullable=True)
-    
-    # Status
     is_read = db.Column(db.Boolean, default=False)
     is_archived = db.Column(db.Boolean, default=False)
-    
-    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     read_at = db.Column(db.DateTime, nullable=True)
-    
-    # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='notifications')
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_notifications')
     
@@ -192,36 +184,24 @@ class NotificationPreference(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
-    
-    # Email notification preferences
     email_messages = db.Column(db.Boolean, default=True)
     email_mentorship_requests = db.Column(db.Boolean, default=True)
     email_mentorship_responses = db.Column(db.Boolean, default=True)
     email_event_reminders = db.Column(db.Boolean, default=True)
     email_event_updates = db.Column(db.Boolean, default=True)
     email_weekly_digest = db.Column(db.Boolean, default=False)
-    
-    # In-app notification preferences
     inapp_messages = db.Column(db.Boolean, default=True)
     inapp_mentorship_requests = db.Column(db.Boolean, default=True)
     inapp_mentorship_responses = db.Column(db.Boolean, default=True)
     inapp_event_reminders = db.Column(db.Boolean, default=True)
     inapp_event_updates = db.Column(db.Boolean, default=True)
-    
-    # Reminder settings
     reminder_days_before = db.Column(db.Integer, default=1)
     reminder_time = db.Column(db.String(5), default='09:00')
-    
-    # Quiet hours
     quiet_hours_enabled = db.Column(db.Boolean, default=False)
     quiet_hours_start = db.Column(db.String(5), nullable=True)
     quiet_hours_end = db.Column(db.String(5), nullable=True)
-    
-    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationship
     user = db.relationship('User', backref='notification_preferences')
     
     def __repr__(self):
@@ -240,22 +220,18 @@ class Event(db.Model):
     end_date = db.Column(db.DateTime, nullable=False)
     registration_deadline = db.Column(db.DateTime, nullable=True)
     location = db.Column(db.String(200), nullable=True)
-
     venue_name =db.Column(db.String(200), nullable =True)
     venue_address = db.Column(db.String(200))
     venue_capacity = db.Column(db.Integer, nullable= True)
-
     online_platform =db.Column(db.String(50), nullable=True)
     online_link = db.Column(db.String(500), nullable=True)
     Meeting_id = db.Column(db.String(100), nullable=True)
     meeting_password = db.Column(db.String(100), nullable=True)
     dial_in_numbers = db.Column(db.String(500), nullable=True)
-
     organizer_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
     organizer = db.relationship('User', backref='organized_events', foreign_keys=[organizer_id])
-
-    capacity = db.Column(db.Integer, nullable=True)  # Maximum attendees (None = unlimited)
-    price = db.Column(db.Float, default=0.0)  # 0.0 for free events
+    capacity = db.Column(db.Integer, nullable=True) 
+    price = db.Column(db.Float, default=0.0) 
     image_url = db.Column(db.String(500), nullable=True)
 
     is_published = db.Column(db.Boolean, default=False)
@@ -296,8 +272,8 @@ class EventRegistration(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='registered')  # registered, attended, cancelled, waitlisted
-    payment_status = db.Column(db.String(20), default='pending')  # pending, paid, free, refunded
+    status = db.Column(db.String(20), default='registered')  
+    payment_status = db.Column(db.String(20), default='pending') 
     payment_amount = db.Column(db.Float, default=0.0)
     payment_date = db.Column(db.DateTime, nullable=True)
     payment_method = db.Column(db.String(50), nullable=True)
@@ -316,12 +292,10 @@ class ConnectionRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    status = db.Column(db.String(20), default='pending') 
     message = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     responded_at = db.Column(db.DateTime, nullable=True)
-    
-    # Relationships
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_connections')
     receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_connections')
     
@@ -338,18 +312,17 @@ class MentorResource(db.Model):
     alumni_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    file_path = db.Column(db.String(500), nullable=True)  # URL to uploaded file
-    file_type = db.Column(db.String(50), nullable=True)  # pdf, video, link, etc.
-    resource_type = db.Column(db.String(50), nullable=False, default='document')  # document, video, link, assignment
-    external_link = db.Column(db.String(500), nullable=True)
+    file_path = db.Column(db.String(500), nullable=True) 
+    file_type = db.Column(db.String(50), nullable=True) 
+    resource_type = db.Column(db.String(50), nullable=False, default='document') 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Who can access (all mentees or specific ones)
-    is_public = db.Column(db.Boolean, default=True)  # True = all mentees, False = specific
-    mentee_ids = db.Column(db.Text, nullable=True)  # Comma-separated list of mentee IDs
+
+    is_public = db.Column(db.Boolean, default=True)  
+    mentee_ids = db.Column(db.Text, nullable=True)  
     
-    # Relationships
+    
     alumni = db.relationship('User', backref='mentor_resources')
     
     def __repr__(self):
@@ -362,25 +335,15 @@ class MentorshipSession(db.Model):
     mentorship_request_id = db.Column(db.Integer, db.ForeignKey('mentorship_requests.id', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    
-    # Session timing
     session_date = db.Column(db.DateTime, nullable=False)
-    duration_minutes = db.Column(db.Integer, default=60)  # Duration in minutes
-    status = db.Column(db.String(20), default='scheduled')  # scheduled, completed, cancelled
-    
-    # Meeting details
-    meeting_link = db.Column(db.String(500), nullable=True)  # Zoom/Teams link
+    duration_minutes = db.Column(db.Integer, default=60)  
+    status = db.Column(db.String(20), default='scheduled')  
+    meeting_link = db.Column(db.String(500), nullable=True)
     meeting_platform = db.Column(db.String(50), nullable=True)
-    location = db.Column(db.String(200), nullable=True)  # For in-person sessions
-    
-    # Resources
+    location = db.Column(db.String(200), nullable=True) 
     resources = db.relationship('SessionResource', backref='session', lazy=True, cascade='all, delete-orphan')
-    
-    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
     mentorship_request = db.relationship('MentorshipRequest', backref='sessions')
     
     def __repr__(self):
@@ -393,8 +356,8 @@ class SessionResource(db.Model):
     session_id = db.Column(db.Integer, db.ForeignKey('mentorship_sessions.id', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    file_path = db.Column(db.String(500), nullable=True)  # URL to uploaded file
-    resource_type = db.Column(db.String(50), default='document')  # document, video, link, assignment
+    file_path = db.Column(db.String(500), nullable=True) 
+    resource_type = db.Column(db.String(50), default='document') 
     external_link = db.Column(db.String(500), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -409,11 +372,9 @@ class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     connected_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, accepted, blocked
+    status = db.Column(db.String(20), default='pending')  
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     accepted_at = db.Column(db.DateTime, nullable=True)
-    
-    # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='connection_requests')
     connected_user = db.relationship('User', foreign_keys=[connected_user_id], backref='accepted_connections')
     
@@ -429,16 +390,16 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    media_url = db.Column(db.String(500), nullable=True)  # Image/video URL
-    media_type = db.Column(db.String(20), default='text')  # text, image, video, link
-    link_url = db.Column(db.String(500), nullable=True)   # External link
+    media_url = db.Column(db.String(500), nullable=True) 
+    media_type = db.Column(db.String(20), default='text')
+    link_url = db.Column(db.String(500), nullable=True)   
     link_title = db.Column(db.String(200), nullable=True)
-    visibility = db.Column(db.String(20), default='connections')  # public, connections, private
+    visibility = db.Column(db.String(20), default='connections') 
     is_announcement = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
+    
     author = db.relationship('User', backref='posts')
     likes = db.relationship('PostLike', backref='post', lazy=True, cascade='all, delete-orphan')
     comments = db.relationship('PostComment', backref='post', lazy=True, cascade='all, delete-orphan')

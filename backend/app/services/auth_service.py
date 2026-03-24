@@ -28,19 +28,19 @@ def create_user(full_name, email, password, role):
         return None, "Security Error: Admins cannot self-register."
 
     try:
-        # Check if user already exists
+       
         print(f"[auth_service] Checking if email {email} already exists")
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             print(f"[auth_service] Email {email} already registered")
             return None, "Error: Email already registered."
 
-        # Hash the password
+        
         print("[auth_service] Hashing password...")
         hashed_password = hash_password(password)
         print(f"[auth_service] Password hashed successfully: {hashed_password[:30]}...")
         
-        # Create new user
+
         print("[auth_service] Creating user object...")
         new_user = User(
             full_name=full_name,

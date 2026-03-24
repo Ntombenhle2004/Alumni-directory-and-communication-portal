@@ -34,19 +34,67 @@ def update_profile():
         flash('Please login to update your profile.', 'error')
         return redirect(url_for('views.login_page'))
     
-    
+    # Handle both JSON and form data
     if request.is_json:
         data = request.get_json()
     else:
-        data = request.form
+        data = request.form.to_dict()
     
+    # Update user table fields first (full_name, email)
+    if 'full_name' in data and data['full_name']:
+        user.full_name = data['full_name']
+    
+    if 'email' in data and data['email']:
+        # Check if email is already taken by another user
+        existing_user = User.query.filter_by(email=data['email']).first()
+        if existing_user and existing_user.id != user.id:
+            flash('Email already in use by another account.', 'error')
+            if user.role == 'student':
+                return redirect(url_for('profile_module.student_profile_view'))
+            else:
+                return redirect(url_for('profile_module.alumni_profile_view'))
+        user.email = data['email']
+    
+    # Handle profile picture upload
+    if 'profile_picture' in request.files:
+        file = request.files['profile_picture']
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            # Create unique filename
+            unique_filename = f"user_{user.id}_{int(datetime.utcnow().timestamp())}_{filename}"
+            upload_dir = os.path.join('static', 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = os.path.join(upload_dir, unique_filename)
+            file.save(file_path)
+            user.profile_picture = unique_filename
+    
+    # Commit user changes
+    db.session.commit()
+    
+    # Now update role-specific profile
     result = None
     error = None
     
     if user.role == 'student':
-        result, error = profile_service.update_student_details(user.id, data)
+        # Prepare student-specific data
+        student_data = {
+            'course': data.get('course'),
+            'graduation_year': data.get('graduation_year'),
+            'interests': data.get('interests'),
+            'is_subscribed': data.get('is_subscribed')
+        }
+        result, error = profile_service.update_student_details(user.id, student_data)
     elif user.role == 'alumni':
-        result, error = profile_service.update_alumni_details(user.id, data)
+        # Prepare alumni-specific data
+        alumni_data = {
+            'job_title': data.get('job_title'),
+            'company': data.get('company'),
+            'industry': data.get('industry'),
+            'skills': data.get('skills'),
+            'graduation_year': data.get('graduation_year'),
+            'mentorship_available': data.get('mentorship_available')
+        }
+        result, error = profile_service.update_alumni_details(user.id, alumni_data)
     else:
         error = "Invalid user role"
     
@@ -55,17 +103,11 @@ def update_profile():
     else:
         flash('Profile updated successfully!', 'success')
     
-    
-    if request.is_json:
-        if error:
-            return jsonify({"error": error}), 400
-        return jsonify({"message": "Profile updated successfully", "profile": result}), 200
-    
-    
+    # Redirect based on user role
     if user.role == 'student':
-        return redirect(url_for('student.my_profile'))
+        return redirect(url_for('profile_module.student_profile_view'))
     elif user.role == 'alumni':
-        return redirect(url_for('views.alumni_profile'))
+        return redirect(url_for('profile_module.alumni_profile_view'))
     else:
         return redirect(url_for('views.home'))
 
@@ -89,7 +131,7 @@ def upload_picture():
     if file:
        
         filename = secure_filename(file.filename)
-        # Add user ID to filename to avoid conflicts
+        
         filename = f"user_{user.id}_{filename}"
         
         
@@ -203,7 +245,7 @@ def edit_student_profile():
         flash('You do not have permission to access this page.', 'error')
         return redirect(url_for('views.home'))
     
-    # Get profile data using service
+    
     profile_data, error = profile_service.get_profile_logic(user.id)
     
     if error:
@@ -224,7 +266,7 @@ def toggle_mentorship():
     data = request.get_json()
     available = data.get('available', True)
     
-    # Get or create alumni profile
+    
     from ..models.user import AlumniProfile
     profile = AlumniProfile.query.filter_by(user_id=user.id).first()
     
@@ -264,10 +306,53 @@ def alumni_settings():
         flash('Please login as an alumni to view settings.', 'error')
         return redirect(url_for('views.login_page'))
     
-    # Get alumni profile
     from ..models.user import AlumniProfile
     profile = AlumniProfile.query.filter_by(user_id=user.id).first()
     
     return render_template("alumni/settings.html", 
                          user=user, 
                          profile=profile)
+
+def update_alumni_details(user_id, data):
+    """Updates Alumni table. Handles 'alumni' or 'alumn' roles."""
+    try:
+        user = User.query.get(user_id)
+        
+        if not user or user.role.lower() not in ['alumni', 'alumn']:
+            return None, f"Unauthorized: User is a {user.role if user else 'None'}, not an alumnus."
+
+        profile = AlumniProfile.query.filter_by(user_id=user_id).first()
+        if not profile:
+            profile = AlumniProfile(user_id=user_id)
+            db.session.add(profile)
+
+        # Update fields only if they are provided
+        if 'job_title' in data and data['job_title']:
+            profile.job_title = data['job_title']
+        if 'company' in data and data['company']:
+            profile.company = data['company']
+        if 'industry' in data and data['industry']:
+            profile.industry = data['industry']
+        if 'skills' in data and data['skills']:
+            profile.skills = data['skills']
+        if 'graduation_year' in data and data['graduation_year']:
+            try:
+                profile.graduation_year = int(data['graduation_year'])
+            except (ValueError, TypeError):
+                pass
+        
+        # Handle mentorship_available checkbox
+        if 'mentorship_available' in data:
+            val = data['mentorship_available']
+            if isinstance(val, str):
+                profile.mentorship_available = val.lower() == 'true' or val == 'on'
+            else:
+                profile.mentorship_available = bool(val)
+        
+        db.session.commit()
+        return profile, None
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        return None, f"Alumni update failed: {str(e)}"

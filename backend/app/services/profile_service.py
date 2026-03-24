@@ -59,10 +59,20 @@ def update_student_details(user_id, data):
             profile = StudentProfile(user_id=user_id)
             db.session.add(profile)
 
-        if 'course' in data: profile.course = data['course']
-        if 'graduation_year' in data: profile.graduation_year = data['graduation_year']
-        if 'interests' in data: profile.interests = data['interests']
-        if 'is_subscribed' in data: profile.is_subscribed = data['is_subscribed']
+        if 'course' in data:
+            profile.course = data['course']
+        if 'graduation_year' in data and data['graduation_year']:
+            profile.graduation_year = int(data['graduation_year'])
+        if 'interests' in data:
+            profile.interests = data['interests']
+        
+        # Fix: Convert string 'true'/'false' to boolean
+        if 'is_subscribed' in data:
+            val = data['is_subscribed']
+            if isinstance(val, str):
+                profile.is_subscribed = val.lower() == 'true'
+            else:
+                profile.is_subscribed = bool(val)
         
         db.session.commit()
         return profile, None
@@ -83,14 +93,24 @@ def update_alumni_details(user_id, data):
             profile = AlumniProfile(user_id=user_id)
             db.session.add(profile)
 
-        if 'job_title' in data: profile.job_title = data['job_title']
-        if 'company' in data: profile.company = data['company']
-        if 'industry' in data: profile.industry = data['industry']
-        if 'skills' in data: profile.skills = data['skills']
-        if 'graduation_year' in data: profile.graduation_year = data['graduation_year']
-      
+        if 'job_title' in data:
+            profile.job_title = data['job_title']
+        if 'company' in data:
+            profile.company = data['company']
+        if 'industry' in data:
+            profile.industry = data['industry']
+        if 'skills' in data:
+            profile.skills = data['skills']
+        if 'graduation_year' in data and data['graduation_year']:
+            profile.graduation_year = int(data['graduation_year'])
+        
+        
         if 'mentorship_available' in data:
-            profile.mentorship_available = data['mentorship_available']
+            val = data['mentorship_available']
+            if isinstance(val, str):
+                profile.mentorship_available = val.lower() == 'true'
+            else:
+                profile.mentorship_available = bool(val)
         
         db.session.commit()
         return profile, None

@@ -347,3 +347,69 @@ def transactions():
     transactions.sort(key=lambda x: x['date'] if x['date'] else datetime.min, reverse=True)
     
     return render_template('admin/transactions.html', user=user, transactions=transactions)
+
+@admin_bp.route('/users/add', methods=['POST'])
+@admin_required
+def add_user():
+    """Add a new user"""
+    data = request.get_json()
+    full_name = data.get('full_name')
+    email = data.get('email')
+    role = data.get('role', 'student')
+    password = data.get('password')
+    
+    if not full_name or not email:
+        return jsonify({'error': 'Name and email required'}), 400
+    
+    # Check if user exists
+    existing = User.query.filter_by(email=email).first()
+    if existing:
+        return jsonify({'error': 'Email already exists'}), 400
+    
+    # Hash password
+    from ..services.auth_service import hash_password
+    hashed_password = hash_password(password) if password else hash_password('password123')
+    
+    # Create user
+    new_user = User(
+        full_name=full_name,
+        email=email,
+        password_hash=hashed_password,
+        role=role
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'user_id': new_user.id})
+
+@admin_bp.route('/users/<int:user_id>/reset-password', methods=['POST'])
+@admin_required
+def reset_user_password(user_id):
+    """Reset a user's password"""
+    target_user = User.query.get_or_404(user_id)
+    data = request.get_json()
+    new_password = data.get('password')
+    
+    if not new_password:
+        return jsonify({'error': 'Password required'}), 400
+    
+    from ..services.auth_service import hash_password
+    target_user.password_hash = hash_password(new_password)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@admin_bp.route('/users/<int:user_id>/delete', methods=['DELETE'])
+@admin_required
+def delete_user(user_id):
+    """Delete a user"""
+    target_user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting yourself
+    if target_user.id == session.get('user_id'):
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+    
+    db.session.delete(target_user)
+    db.session.commit()
+    
+    return jsonify({'success': True})

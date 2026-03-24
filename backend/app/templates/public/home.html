@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alumni Directory & Communication Portal</title>
+    <title>Alumni Portal - Connect, Mentor, Grow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -12,160 +14,214 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
             color: #333;
         }
         
+        /* Navbar */
         .navbar {
-            background: #2c3e50;
-            color: white;
+            background: white;
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .logo i {
+            color: #667eea;
+            margin-right: 0.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
         }
         
         .nav-links a {
-            color: white;
             text-decoration: none;
-            margin-left: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
         }
         
-        .nav-links a:hover {
-            color: #3498db;
+        .nav-links .login {
+            color: #667eea;
+            border: 1px solid #667eea;
         }
         
-        .hero {
+        .nav-links .login:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav-links .register {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+        }
+        
+        .nav-links .register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Hero */
+        .hero {
             text-align: center;
             padding: 4rem 2rem;
+            background: white;
         }
         
         .hero h1 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .hero h1 span {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto 2rem;
         }
         
         .btn {
             display: inline-block;
             padding: 0.8rem 2rem;
-            background: #3498db;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
-            margin: 0 0.5rem;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s;
         }
         
         .btn:hover {
-            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
         
-        .btn-outline {
-            background: transparent;
-            border: 2px solid white;
-        }
-        
-        .btn-outline:hover {
-            background: white;
-            color: #764ba2;
-        }
-        
+        /* Features */
         .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 4rem 2rem;
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
         }
         
-        .feature-card {
-            text-align: center;
+        .feature {
+            background: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
         }
         
-        .feature-card:hover {
+        .feature:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         
-        .feature-card h3 {
-            color: #2c3e50;
+        .feature i {
+            font-size: 2rem;
+            color: #667eea;
             margin-bottom: 1rem;
         }
         
+        .feature h3 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        /* Footer */
         .footer {
-            background: #34495e;
-            color: white;
             text-align: center;
             padding: 2rem;
+            background: white;
+            color: #666;
+            border-top: 1px solid #eee;
             margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">Alumni Portal</div>
+        <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+            Alumni Portal
+        </div>
         <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
+            <a href="/login" class="login">Login</a>
+            <a href="/register" class="register">Sign Up</a>
         </div>
     </nav>
 
     <section class="hero">
-        <h1>Welcome to Alumni Directory & Communication Portal</h1>
-        <p>Connect with fellow alumni, find mentors, and grow your network</p>
-        <div>
-            <a href="/register" class="btn">Get Started</a>
-            <a href="/login" class="btn btn-outline">Login</a>
-        </div>
+        <h1>Welcome to <span>Alumni Portal</span></h1>
+        <p>Connect with alumni, find mentors, and grow your professional network</p>
+        <a href="/register" class="btn">Get Started</a>
     </section>
 
     <section class="features">
-        <div class="feature-card">
-            <h3>Network Building</h3>
-            <p>Connect with alumni from your institution and expand your professional network.</p>
+        <div class="feature">
+            <i class="fas fa-handshake"></i>
+            <h3>Find a Mentor</h3>
+            <p>Connect with experienced alumni who can guide your career journey</p>
         </div>
-        <div class="feature-card">
-            <h3>Mentorship Program</h3>
-            <p>Find mentors or become one to guide the next generation of professionals.</p>
-        </div>
-        <div class="feature-card">
+        <div class="feature">
+            <i class="fas fa-comments"></i>
             <h3>Direct Messaging</h3>
-            <p>Communicate directly with alumni and students through our integrated chat system.</p>
+            <p>Chat directly with mentors and fellow alumni</p>
         </div>
-        <div class="feature-card">
-            <h3>Career Opportunities</h3>
-            <p>Discover job opportunities and share them with the community.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Events & Meetups</h3>
-            <p>Stay updated with alumni events, webinars, and networking meetups.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Resource Sharing</h3>
-            <p>Share and access valuable resources, documents, and learning materials.</p>
+        <div class="feature">
+            <i class="fas fa-calendar"></i>
+            <h3>Events & Webinars</h3>
+            <p>Join exclusive events and networking opportunities</p>
         </div>
     </section>
 
     <footer class="footer">
-        <p>&copy; 2026 Alumni Directory & Communication Portal. All rights reserved.</p>
+        <p>&copy; 2026 Alumni Portal. All rights reserved.</p>
     </footer>
 </body>
 </html>

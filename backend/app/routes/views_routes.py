@@ -43,11 +43,17 @@ def alumni_profile():
     if not user or user.role != 'alumni':
         return redirect(url_for('views.login_page'))
     
-    alumni_profile = AlumniProfile.query.filter_by(user_id=user.id).first()
+    # Get profile data using service
+    from ..services import profile_service
+    profile_data, error = profile_service.get_profile_logic(user.id)
+    
+    if error:
+        flash(error, 'error')
+        return redirect(url_for('views.alumni_dashboard'))
     
     return render_template("alumni/profile.html", 
                          user=user, 
-                         profile=alumni_profile)
+                         profile_data=profile_data)  # Make sure this is passedssed
 
 
 @views.route("/alumni/mentorship")
@@ -247,7 +253,6 @@ def alumni_messages():
     
     from ..models.user import Conversation, Message, User
     
-   
     conversations = Conversation.query.filter(
         (Conversation.student_id == user.id) | (Conversation.alumni_id == user.id)
     ).order_by(Conversation.created_at.desc()).all()

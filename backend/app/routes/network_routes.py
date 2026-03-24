@@ -22,33 +22,32 @@ def connections():
     if not user:
         return redirect(url_for('views.login_page'))
     
-    # Get accepted connections
+   
     accepted_connections = Connection.query.filter(
         ((Connection.user_id == user.id) | (Connection.connected_user_id == user.id)),
         Connection.status == 'accepted'
     ).all()
     
-    # Get pending requests sent by user
+   
     sent_requests = Connection.query.filter_by(
         user_id=user.id,
         status='pending'
     ).all()
     
-    # Get pending requests received by user
+   
     received_requests = Connection.query.filter_by(
         connected_user_id=user.id,
         status='pending'
     ).all()
     
-    # Get suggested connections (alumni not yet connected)
+   
     connected_ids = [user.id]
     for conn in accepted_connections:
         if conn.user_id == user.id:
             connected_ids.append(conn.connected_user_id)
         else:
             connected_ids.append(conn.user_id)
-    
-    # Also exclude those with pending requests
+ 
     for req in sent_requests:
         connected_ids.append(req.connected_user_id)
     for req in received_requests:
@@ -78,7 +77,7 @@ def send_connection_request(user_id):
     if current_user.id == user_id:
         return jsonify({"error": "Cannot connect to yourself"}), 400
     
-    # Check if connection already exists
+
     existing = Connection.query.filter(
         ((Connection.user_id == current_user.id) & (Connection.connected_user_id == user_id)) |
         ((Connection.user_id == user_id) & (Connection.connected_user_id == current_user.id))
@@ -95,7 +94,7 @@ def send_connection_request(user_id):
     db.session.add(connection)
     db.session.commit()
     
-    # Send notification
+  
     NotificationService.create_notification(
         user_id=user_id,
         sender_id=current_user.id,
@@ -123,7 +122,7 @@ def accept_connection(connection_id):
     connection.accepted_at = datetime.utcnow()
     db.session.commit()
     
-    # Send notification
+
     NotificationService.create_notification(
         user_id=connection.user_id,
         sender_id=current_user.id,
@@ -174,7 +173,7 @@ def feed():
         else:
             connected_ids.append(conn.user_id)
     
-    # Get posts from connections and user's own posts
+   
     posts = Post.query.filter(
         Post.author_id.in_(connected_ids),
         Post.visibility.in_(['public', 'connections'])
@@ -197,7 +196,7 @@ def create_post():
     media_url = None
     media_type = 'text'
     
-    # Handle file upload
+    
     if 'media' in request.files:
         file = request.files['media']
         if file and file.filename:
@@ -209,13 +208,13 @@ def create_post():
             file.save(os.path.join(upload_dir, unique_filename))
             media_url = file_path
             
-            # Determine media type
+           
             if file.content_type and file.content_type.startswith('image'):
                 media_type = 'image'
             elif file.content_type and file.content_type.startswith('video'):
                 media_type = 'video'
     
-    # Handle link
+  
     link_url = request.form.get('link_url')
     link_title = request.form.get('link_title')
     visibility = request.form.get('visibility', 'connections')
@@ -254,7 +253,7 @@ def like_post(post_id):
     
     db.session.commit()
     
-    # Get updated like count
+  
     like_count = PostLike.query.filter_by(post_id=post_id).count()
     
     return jsonify({"liked": liked, "likes_count": like_count}), 200
@@ -278,7 +277,7 @@ def comment_on_post(post_id):
     db.session.add(comment)
     db.session.commit()
     
-    # Send notification to post author
+    
     post = Post.query.get(post_id)
     if post.author_id != user.id:
         NotificationService.create_notification(

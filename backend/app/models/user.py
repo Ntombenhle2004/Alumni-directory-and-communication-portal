@@ -73,18 +73,26 @@ class Message(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     
 class AdminLog(db.Model):
+    """Track admin actions"""
     __tablename__ = 'admin_logs'
     id = db.Column(db.Integer, primary_key=True)
-    admin_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
-    action = db.Column(db.Text, nullable=False)
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    action = db.Column(db.String(100))  
+    target_type = db.Column(db.String(50))  
+    target_id = db.Column(db.Integer)
+    details = db.Column(db.Text)  
+    ip_address = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    admin = db.relationship('User', backref='admin_actions')
     
 class SystemSetting(db.Model):
+    """System-wide settings"""
     __tablename__ = 'system_settings'
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(50), unique=True, nullable=False) 
-    value = db.Column(db.String(100), nullable=False)     
+    key = db.Column(db.String(100), unique=True)
+    value = db.Column(db.Text)
+    description = db.Column(db.Text)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))    
     
 class Subscription(db.Model):
     __tablename__ = 'subscriptions'
@@ -106,12 +114,28 @@ class Rating(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Report(db.Model):
+    """User reports for content"""
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
-    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    reason = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='Pending')
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    content_type = db.Column(db.String(50))  # 'post', 'comment', 'message', 'profile'
+    content_id = db.Column(db.Integer)
+    reason = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending, reviewed, resolved, dismissed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+    resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+class AuditLog(db.Model):
+    """System audit logs"""
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    action = db.Column(db.String(100))
+    ip_address = db.Column(db.String(50))
+    user_agent = db.Column(db.String(500))
+    details = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
 class Notification(db.Model):

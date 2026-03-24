@@ -1,0 +1,138 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Users</h3>
+        <div class="stat-number">{{ stats.total_users }}</div>
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Alumni</h3>
+        <div class="stat-number">{{ stats.total_alumni }}</div>
+        <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Students</h3>
+        <div class="stat-number">{{ stats.total_students }}</div>
+        <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Active Mentorships</h3>
+        <div class="stat-number">{{ stats.active_mentorships }}</div>
+        <div class="stat-icon"><i class="fas fa-handshake"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Mentorships</h3>
+        <div class="stat-number">{{ stats.pending_mentorships }}</div>
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Upcoming Events</h3>
+        <div class="stat-number">{{ stats.upcoming_events }}</div>
+        <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Posts</h3>
+        <div class="stat-number">{{ stats.total_posts }}</div>
+        <div class="stat-icon"><i class="fas fa-newspaper"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Revenue (This Month)</h3>
+        <div class="stat-number">R{{ "%.2f"|format(stats.revenue_this_month) }}</div>
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <div class="admin-table" style="padding: 1.5rem;">
+        <h3>User Growth (Last 6 Months)</h3>
+        <canvas id="userGrowthChart" height="200"></canvas>
+    </div>
+    <div class="admin-table" style="padding: 1.5rem;">
+        <h3>Revenue Overview</h3>
+        <canvas id="revenueChart" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Recent Users -->
+<div class="admin-table">
+    <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+        <h3>Recent Users</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in recent_users %}
+            <tr>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.email }}</td>
+                <td><span class="status-badge {% if user.role == 'alumni' %}status-active{% else %}status-pending{% endif %}">{{ user.role|title }}</span></td>
+                <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>
+                    <a href="#" class="btn-sm btn-primary" onclick="alert('User details coming soon')">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // User Growth Chart
+    const ctx1 = document.getElementById('userGrowthChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: {{ months|tojson }},
+            datasets: [{
+                label: 'New Users',
+                data: {{ user_growth|tojson }},
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+    
+    // Revenue Chart
+    const ctx2 = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: {{ months|tojson }},
+            datasets: [{
+                label: 'Revenue (ZAR)',
+                data: {{ revenue_data|tojson }},
+                backgroundColor: '#27ae60',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+</script>
+{% endblock %}

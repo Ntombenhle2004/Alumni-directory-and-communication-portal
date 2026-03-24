@@ -1,0 +1,159 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Reports & Flagged Content{% endblock %}
+
+{% block page_title %}Reports & Flagged Content{% endblock %}
+
+{% block content %}
+<div class="admin-table">
+    <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <h3>User Reports</h3>
+        <div>
+            <select id="filterStatus" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <option value="all">All Reports</option>
+                <option value="pending">Pending</option>
+                <option value="resolved">Resolved</option>
+                <option value="dismissed">Dismissed</option>
+            </select>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Reporter</th>
+                <th>Reported User</th>
+                <th>Content Type</th>
+                <th>Reason</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.id }}</td>
+                <td>
+                    <strong>{{ report.reporter.full_name if report.reporter else 'Unknown' }}</strong><br>
+                    <small>{{ report.reporter.email if report.reporter else 'N/A' }}</small>
+                </td>
+                <td>
+                    <strong>{{ report.reported_user.full_name if report.reported_user else 'Unknown' }}</strong><br>
+                    <small>{{ report.reported_user.email if report.reported_user else 'N/A' }}</small>
+                </td>
+                <td>
+                    <span class="status-badge status-pending">{{ report.content_type|title }}</span>
+                    {% if report.content_id %}
+                    <br><small>ID: {{ report.content_id }}</small>
+                    {% endif %}
+                </td>
+                <td style="max-width: 250px;">{{ report.reason }}</td>
+                <td>{{ report.created_at.strftime('%b %d, %Y') }}<br><small>{{ report.created_at.strftime('%I:%M %p') }}</small></td>
+                <td>
+                    {% if report.status == 'pending' %}
+                        <span class="status-badge status-pending">Pending</span>
+                    {% elif report.status == 'resolved' %}
+                        <span class="status-badge status-active">Resolved</span>
+                    {% else %}
+                        <span class="status-badge status-inactive">Dismissed</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if report.status == 'pending' %}
+                        <button class="btn-sm btn-success" onclick="resolveReport({{ report.id }})">Resolve</button>
+                        <button class="btn-sm btn-warning" onclick="dismissReport({{ report.id }})">Dismiss</button>
+                        {% endif %}
+                        <button class="btn-sm btn-danger" onclick="deleteReport({{ report.id }})">Delete</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Quick Stats -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem;">
+    <div class="stat-card">
+        <h3>Pending Reports</h3>
+        <div class="stat-number">{{ pending_count }}</div>
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Resolved This Month</h3>
+        <div class="stat-number">{{ resolved_this_month }}</div>
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    </div>
+    <div class="stat-card">
+        <h3>Avg Response Time</h3>
+        <div class="stat-number">{{ avg_response_time }}h</div>
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+    </div>
+</div>
+
+<script>
+    function resolveReport(reportId) {
+        if (!confirm('Mark this report as resolved? The reporter will be notified.')) return;
+        
+        fetch(`/admin/reports/${reportId}/resolve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    function dismissReport(reportId) {
+        if (!confirm('Dismiss this report? It will be marked as invalid.')) return;
+        
+        fetch(`/admin/reports/${reportId}/dismiss`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    function deleteReport(reportId) {
+        if (!confirm('Delete this report? This action cannot be undone.')) return;
+        
+        fetch(`/admin/reports/${reportId}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    // Filter functionality
+    document.getElementById('filterStatus').addEventListener('change', function() {
+        const status = this.value;
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const statusCell = row.cells[6];
+            const currentStatus = statusCell.textContent.trim().toLowerCase();
+            
+            if (status === 'all' || currentStatus === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

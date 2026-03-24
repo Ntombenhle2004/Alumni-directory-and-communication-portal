@@ -1,0 +1,128 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Content Moderation{% endblock %}
+
+{% block page_title %}Content Moderation{% endblock %}
+
+{% block content %}
+<div class="admin-table">
+    <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <h3>All Posts & Feed Content</h3>
+        <div>
+            <select id="filterType" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-right: 0.5rem;">
+                <option value="all">All Posts</option>
+                <option value="text">Text Posts</option>
+                <option value="image">Images</option>
+                <option value="video">Videos</option>
+            </select>
+            <input type="text" id="searchPosts" placeholder="Search posts..." style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; width: 200px;">
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Author</th>
+                <th>Content</th>
+                <th>Media</th>
+                <th>Likes</th>
+                <th>Comments</th>
+                <th>Posted</th>
+                <th>Visibility</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts %}
+            <tr data-type="{{ post.media_type }}">
+                <td>{{ post.id }}</td>
+                <td>
+                    <strong>{{ post.author.full_name if post.author else 'Unknown' }}</strong><br>
+                    <small>{{ post.author.email if post.author else 'N/A' }}</small>
+                </td>
+                <td style="max-width: 300px;">
+                    {{ post.content[:100] }}{% if post.content|length > 100 %}...{% endif %}
+                </td>
+                <td>
+                    {% if post.media_url %}
+                        {% if post.media_type == 'image' %}
+                            <a href="{{ post.media_url }}" target="_blank" style="color: #667eea;">
+                                <i class="fas fa-image"></i> View Image
+                            </a>
+                        {% elif post.media_type == 'video' %}
+                            <a href="{{ post.media_url }}" target="_blank" style="color: #e74c3c;">
+                                <i class="fas fa-video"></i> Watch Video
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #999;">No media</span>
+                    {% endif %}
+                </td>
+                <td>{{ post.likes_count }}</td>
+                <td>{{ post.comments_count }}</td>
+                <td>
+                    {{ post.created_at.strftime('%b %d, %Y') }}<br>
+                    <small>{{ post.created_at.strftime('%I:%M %p') }}</small>
+                </td>
+                <td>
+                    {% if post.visibility == 'public' %}
+                        <span class="status-badge status-active">🌍 Public</span>
+                    {% else %}
+                        <span class="status-badge">👥 Connections</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="{{ url_for('network.feed') }}#post-{{ post.id }}" class="btn-sm btn-primary" target="_blank">View</a>
+                        <button class="btn-sm btn-danger" onclick="deletePost({{ post.id }})">Delete</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function deletePost(postId) {
+        if (!confirm('Delete this post? This action cannot be undone. The user will be notified.')) return;
+        
+        fetch(`/admin/posts/${postId}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    // Filter functionality
+    document.getElementById('filterType').addEventListener('change', filterPosts);
+    document.getElementById('searchPosts').addEventListener('input', filterPosts);
+    
+    function filterPosts() {
+        const type = document.getElementById('filterType').value;
+        const search = document.getElementById('searchPosts').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            let show = true;
+            
+            // Type filter
+            if (type !== 'all' && row.dataset.type !== type) show = false;
+            
+            // Search filter
+            if (show && search) {
+                const content = row.cells[2].textContent.toLowerCase();
+                const author = row.cells[1].textContent.toLowerCase();
+                if (!content.includes(search) && !author.includes(search)) show = false;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

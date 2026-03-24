@@ -6,6 +6,7 @@ from ..models.user import Event, EventRegistration
 from ..models.user import Notification
 from ..models.user import Conversation, Message
 from ..models.user import Conversation
+from ..models.user import Conversation
 
 from datetime import datetime
 import os
@@ -57,19 +58,19 @@ def alumni_mentorship():
     
     from ..models.user import MentorshipRequest, User
     
-    # Get pending requests
+    
     pending_requests = MentorshipRequest.query.filter_by(
         alumni_id=user.id,
         status='pending'
     ).order_by(MentorshipRequest.request_date.desc()).all()
     
-    # Get active mentees (accepted requests)
+   
     active_mentees = MentorshipRequest.query.filter_by(
         alumni_id=user.id,
         status='accepted'
     ).order_by(MentorshipRequest.request_date.desc()).all()
     
-    # Get student names for each request
+    
     for request in pending_requests:
         student = User.query.get(request.student_id)
         request.student_name = student.full_name if student else "Unknown Student"
@@ -136,54 +137,54 @@ def alumni_dashboard():
 
         from ..models.user import Conversation, Message, MentorshipRequest, AlumniProfile, StudentProfile, User
         
-        # Get unread messages count
+        
         unread_count = Message.query.join(Conversation).filter(
             Conversation.alumni_id == user.id,
             Message.is_read == False,
             Message.sender_id != user.id
         ).count()
         
-        # Get pending mentorship requests (FIXED: removed duplicate)
+        
         pending_requests = MentorshipRequest.query.filter_by(
             alumni_id=user.id,
             status='pending'
         ).order_by(MentorshipRequest.request_date.desc()).all()
         
-        # Get active mentees count
+       
         active_mentees_count = MentorshipRequest.query.filter_by(
             alumni_id=user.id,
             status='accepted'
         ).count()
         
-        # Get student details for each pending request
+      
         for request in pending_requests:
             student = User.query.get(request.student_id)
             if student:
                 request.student_name = student.full_name
-                # Get student course if available
+                
                 student_profile = StudentProfile.query.filter_by(user_id=student.id).first()
                 request.student_course = student_profile.course if student_profile else None
-                request.student_id = student.id  # Make sure ID is available
+                request.student_id = student.id  
         
         print(f"Unread count: {unread_count}")
         print(f"Pending requests: {len(pending_requests)}")
         
-        # Get alumni profile
+       
         alumni_profile = AlumniProfile.query.filter_by(user_id=user.id).first()
         print(f"Alumni profile found: {alumni_profile is not None}")
         
-        # Calculate average rating if profile exists and has ratings
+      
         if alumni_profile and alumni_profile.rating_count and alumni_profile.rating_count > 0:
             from ..models.user import Rating
             ratings = Rating.query.filter_by(alumni_id=user.id).all()
             avg_rating = sum(r.score for r in ratings) / len(ratings) if ratings else 0
             alumni_profile.rating_avg = avg_rating
         
-        # Generate recent activities from actual data
+   
         recent_activities = []
         
-        # Add pending requests to recent activities
-        for req in pending_requests[:3]:  # Show only 3 most recent
+       
+        for req in pending_requests[:3]:  
             recent_activities.append({
                 'icon': 'fa-clock',
                 'title': f'New mentorship request from {req.student_name if hasattr(req, "student_name") else "a student"}',
@@ -192,7 +193,7 @@ def alumni_dashboard():
                 'type': 'request'
             })
         
-        # If no pending requests, show sample or leave empty
+        
         if not recent_activities:
             recent_activities = [
                 {
@@ -203,10 +204,10 @@ def alumni_dashboard():
                 }
             ]
         
-        # Calculate profile views (you'll need to implement this properly)
-        profile_views = 156  # Placeholder - implement actual view tracking
-        weekly_views = 23    # Placeholder - implement actual weekly tracking
-        new_mentees = 2      # Placeholder - calculate new mentees this month
+       
+        profile_views = 7  
+        weekly_views = 23    
+        new_mentees = 2      
         
         return render_template("alumni/dashboard.html", 
                              user=user, 
@@ -246,7 +247,7 @@ def alumni_messages():
     
     from ..models.user import Conversation, Message, User
     
-    # Get all conversations where user is either student or alumni
+   
     conversations = Conversation.query.filter(
         (Conversation.student_id == user.id) | (Conversation.alumni_id == user.id)
     ).order_by(Conversation.created_at.desc()).all()
@@ -417,26 +418,21 @@ def alumni_start_chat(other_user_id):
         MentorshipRequest.payment_status == 'paid'
     ).first()
     
-    # Allow chat if:
-    # 1. They are connected alumni (connection exists)
-    # 2. They are in an active mentorship relationship
-    # 3. They are the same user (shouldn't happen)
+ 
     if not connection and not mentorship and user.id != other_user_id:
         flash('You can only message your connections or active mentees/mentors.', 'error')
         return redirect(url_for('views.alumni_connections'))
     
-    from ..models.user import Conversation
     
-    # Check if conversation already exists (check both possible arrangements)
+    
+   
     conv = Conversation.query.filter(
         ((Conversation.student_id == user.id) & (Conversation.alumni_id == other_user_id)) |
         ((Conversation.student_id == other_user_id) & (Conversation.alumni_id == user.id))
     ).first()
     
     if not conv:
-        # Create new conversation
-        # For consistency, always put the lower ID as student (just a container)
-        # This doesn't affect functionality, just storage
+       
         conv = Conversation(
             student_id=min(user.id, other_user_id),
             alumni_id=max(user.id, other_user_id)
@@ -454,7 +450,7 @@ def schedule_session(mentee_id):
     if not user or user.role != 'alumni':
         return redirect(url_for('views.login_page'))
     
-    # Check if this is an active mentee
+   
     mentorship = MentorshipRequest.query.filter_by(
         alumni_id=user.id,
         student_id=mentee_id,
@@ -487,7 +483,7 @@ def schedule_session(mentee_id):
         db.session.add(session)
         db.session.commit()
         
-        # Handle resource uploads
+        # Handle resources
         resource_title = request.form.get('resource_title')
         resource_description = request.form.get('resource_description')
         resource_type = request.form.get('resource_type')
@@ -515,7 +511,7 @@ def schedule_session(mentee_id):
             db.session.add(resource)
             db.session.commit()
         
-        # Send notification to student
+       
         from ..services.notification_service import NotificationService
         NotificationService.create_notification(
             user_id=mentee_id,
@@ -542,9 +538,9 @@ def view_session(session_id):
     
     from ..models.user import MentorshipSession, SessionResource, MentorshipRequest
     
-    # Use a different variable name - NOT "session"
+    
     session_data  = MentorshipSession.query.get_or_404(session_id)
-    mentorship = MentorshipRequest.query.get(session_data.mentorship_request_id)  # Use mentorship_session
+    mentorship = MentorshipRequest.query.get(session_data.mentorship_request_id)  
     resources = SessionResource.query.filter_by(session_id=session_id).all()
     
     if user.role == 'alumni':
@@ -554,7 +550,7 @@ def view_session(session_id):
         
         return render_template("alumni/view_session.html", 
                              user=user, 
-                             session_data=session_data,  # Pass as session_data
+                             session_data=session_data,  
                              resources=resources,
                              mentorship=mentorship)
     
@@ -565,7 +561,7 @@ def view_session(session_id):
         
         return render_template("student/view_session.html", 
                              user=user, 
-                             session_data=mentorship_session,  # Pass as session_data
+                             session_data=MentorshipSession,
                              resources=resources,
                              mentorship=mentorship)
     
@@ -583,10 +579,10 @@ def edit_session(session_id):
     from ..models.user import MentorshipSession, SessionResource, MentorshipRequest
     from datetime import datetime
     
-    session_data = MentorshipSession.query.get_or_404(session_id)  # Changed to session_data
+    session_data = MentorshipSession.query.get_or_404(session_id)  
     mentorship = MentorshipRequest.query.get(session_data.mentorship_request_id)
     
-    # Check if this alumni owns this session
+    
     if mentorship.alumni_id != user.id:
         flash('You do not have permission to edit this session.', 'error')
         return redirect(url_for('views.alumni_mentorship'))
@@ -595,7 +591,7 @@ def edit_session(session_id):
     
     if request.method == 'POST':
         try:
-            # Update session details
+          
             session_data.title = request.form.get('title')
             session_data.description = request.form.get('description')
             session_data.session_date = datetime.strptime(request.form.get('session_date'), '%Y-%m-%dT%H:%M')
@@ -607,8 +603,7 @@ def edit_session(session_id):
             
             db.session.commit()
             
-            # Handle resources...
-            # (keep the rest of the resource handling code as before)
+           
             
             flash('Session updated successfully!', 'success')
             return redirect(url_for('views.view_session', session_id=session_data.id))
@@ -687,7 +682,7 @@ def alumni_connections():
         other_id = conn.connected_user_id if conn.user_id == user.id else conn.user_id
         other_user = User.query.get(other_id)
         if other_user:
-            # Safely get alumni profile
+         
             alumni_profile = AlumniProfile.query.filter_by(user_id=other_user.id).first() if other_user.role == 'alumni' else None
             
             connection_list.append({

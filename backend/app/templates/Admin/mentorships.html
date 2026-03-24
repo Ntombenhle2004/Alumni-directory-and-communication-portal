@@ -1,0 +1,86 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Mentorship Management{% endblock %}
+
+{% block page_title %}Mentorship Management{% endblock %}
+
+{% block content %}
+<div class="admin-table">
+    <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+        <h3>All Mentorship Requests</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Student</th>
+                <th>Alumni/Mentor</th>
+                <th>Message</th>
+                <th>Request Date</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.id }}</td>
+                <td>{{ req.student.full_name if req.student else 'N/A' }}</td>
+                <td>{{ req.alumni.full_name if req.alumni else 'N/A' }}</td>
+                <td>{{ req.message[:50] }}{% if req.message|length > 50 %}...{% endif %}</td>
+                <td>{{ req.request_date.strftime('%b %d, %Y') }}</td>
+                <td>
+                    <span class="status-badge {% if req.status == 'accepted' %}status-active{% elif req.status == 'pending' %}status-pending{% else %}status-inactive{% endif %}">
+                        {{ req.status|title }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge {% if req.payment_status == 'paid' %}status-active{% else %}status-pending{% endif %}">
+                        {{ req.payment_status|title }}
+                    </span>
+                </td>
+                <td>
+                    {% if req.status == 'pending' %}
+                    <button class="btn-sm btn-success" onclick="approveMentorship({{ req.id }})">Approve</button>
+                    {% endif %}
+                    <button class="btn-sm btn-danger" onclick="deleteMentorship({{ req.id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function approveMentorship(requestId) {
+        if (!confirm('Approve this mentorship request?')) return;
+        
+        fetch(`/admin/mentorships/${requestId}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    function deleteMentorship(requestId) {
+        if (!confirm('Delete this mentorship request? This action cannot be undone.')) return;
+        
+        fetch(`/admin/mentorships/${requestId}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,59 +1,349 @@
-from flask import Blueprint, jsonify, request
-from ..services.admin_service import get_all_logs_logic, log_admin_action
-from ..models.user import SystemSetting
+from flask import Blueprint, render_template, session, redirect, url_for, flash, request, jsonify
+from ..models.user import User, MentorshipRequest, Event, Post, Report
 from ..config.db import db
+from datetime import datetime, timedelta
+from functools import wraps
 
-admin_bp = Blueprint("admin", __name__)
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-@admin_bp.route("/admin/logs", methods=["GET"])
-def view_audit_logs():
-    """Fetches a list of all administrative actions taken."""
-    logs, error = get_all_logs_logic()
-    if error:
-        return jsonify({"error": error}), 400
+@admin_bp.route('/test')
+def test():
+    return "Admin blueprint is working!"
+
+# Admin decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please login first', 'error')
+            return redirect(url_for('views.login_page'))
+        
+        user = User.query.get(session['user_id'])
+        
+        if not user or user.role != 'admin':
+            flash('Admin access required', 'error')
+            return redirect(url_for('views.home'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Helper to get current user
+def get_current_user():
+    if 'user_id' in session:
+        return User.query.get(session['user_id'])
+    return None
+
+# Helper to calculate monthly revenue
+def calculate_monthly_revenue():
+    """Calculate total revenue from the current month"""
+    now = datetime.utcnow()
+    start_of_month = datetime(now.year, now.month, 1)
     
-    results = []
-    for log in logs:
-        results.append({
-            "id": log.id,
-            "admin_name": log.admin.full_name if log.admin else "System/Unknown",
-            "action": log.action,
-            "timestamp": log.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        })
-    return jsonify(results), 200
+    # Get paid mentorships this month
+    paid_mentorships = MentorshipRequest.query.filter(
+        MentorshipRequest.payment_status == 'paid',
+        MentorshipRequest.payment_date >= start_of_month
+    ).all()
+    
+    revenue = sum([m.payment_amount for m in paid_mentorships if m.payment_amount])
+    return revenue
 
-@admin_bp.route("/admin/settings/price", methods=["POST"])
-def update_price():
-    data = request.get_json()
-    admin_id = data.get("admin_id")
-    new_price = data.get("price")  
-
-    if not new_price:
-        return jsonify({"error": "Price value is required"}), 400
-
-    try:
-        setting = SystemSetting.query.filter_by(key='sub_price').first()
-        if not setting:
-            setting = SystemSetting(key='sub_price', value=str(new_price))
-            db.session.add(setting)
+# Dashboard
+@admin_bp.route('/')
+@admin_required
+def dashboard():
+    user = get_current_user()
+    now = datetime.utcnow()
+    start_of_month = datetime(now.year, now.month, 1)
+    
+    # Calculate monthly revenue
+    paid_mentorships = MentorshipRequest.query.filter(
+        MentorshipRequest.payment_status == 'paid',
+        MentorshipRequest.payment_date >= start_of_month
+    ).all()
+    revenue_this_month = sum([m.payment_amount for m in paid_mentorships if m.payment_amount])
+    
+    # Simple stats
+    stats = {
+        'total_users': User.query.count(),
+        'total_alumni': User.query.filter_by(role='alumni').count(),
+        'total_students': User.query.filter_by(role='student').count(),
+        'active_mentorships': MentorshipRequest.query.filter_by(status='accepted').count(),
+        'pending_mentorships': MentorshipRequest.query.filter_by(status='pending').count(),
+        'total_events': Event.query.count(),
+        'upcoming_events': Event.query.filter(Event.start_date > now).count(),
+        'total_posts': Post.query.count(),
+        'pending_reports': Report.query.filter_by(status='pending').count(),
+        'revenue_this_month': revenue_this_month
+    }
+    
+    # Recent users
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+    
+    # Chart data (last 6 months)
+    months = []
+    user_growth = []
+    revenue_data = []
+    
+    for i in range(5, -1, -1):
+        month_date = now - timedelta(days=30*i)
+        month_start = datetime(month_date.year, month_date.month, 1)
+        
+        # Calculate next month start
+        if month_date.month == 12:
+            month_end = datetime(month_date.year + 1, 1, 1)
         else:
-            setting.value = str(new_price)
+            month_end = datetime(month_date.year, month_date.month + 1, 1)
         
-        db.session.commit()
-  
-        log_admin_action(admin_id, f"Updated subscription price to R{int(new_price)/100}")
+        months.append(month_start.strftime('%b'))
         
-        return jsonify({"message": "Price updated successfully", "current_price": new_price}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        # New users this month
+        new_users = User.query.filter(
+            User.created_at >= month_start,
+            User.created_at < month_end
+        ).count()
+        user_growth.append(new_users)
+        
+        # Revenue this month
+        month_revenue = sum([m.payment_amount for m in MentorshipRequest.query.filter(
+            MentorshipRequest.payment_status == 'paid',
+            MentorshipRequest.payment_date >= month_start,
+            MentorshipRequest.payment_date < month_end
+        ).all() if m.payment_amount])
+        revenue_data.append(month_revenue)
+    
+    return render_template('admin/dashboard.html', 
+                         user=user, 
+                         stats=stats,
+                         recent_users=recent_users,
+                         months=months,
+                         user_growth=user_growth,
+                         revenue_data=revenue_data)
 
-@admin_bp.route("/admin/settings/price", methods=["GET"])
-def get_admin_price():
-    setting = SystemSetting.query.filter_by(key='sub_price').first()
-    price = int(setting.value) if setting else 5000  
-    return jsonify({
-        "price_cents": price,
-        "price_rand": price / 100,
-        "display": f"R{price / 100:.2f}"
-    }), 200
+# User Management
+@admin_bp.route('/users')
+@admin_required
+def users():
+    user = get_current_user()
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin/users.html', user=user, users=users)
+
+@admin_bp.route('/users/<int:user_id>/role', methods=['POST'])
+@admin_required
+def change_role(user_id):
+    target_user = User.query.get_or_404(user_id)
+    new_role = request.json.get('role')
+    
+    if new_role in ['student', 'alumni', 'admin']:
+        target_user.role = new_role
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Invalid role'}), 400
+
+@admin_bp.route('/users/<int:user_id>/toggle-status', methods=['POST'])
+@admin_required
+def toggle_user_status(user_id):
+    """Deactivate/reactivate a user"""
+    target_user = User.query.get_or_404(user_id)
+    
+    # Add is_active field if it doesn't exist, otherwise toggle
+    if not hasattr(target_user, 'is_active'):
+        from sqlalchemy import Column, Boolean
+        # You'd need to add this field to your model
+        target_user.is_active = not getattr(target_user, 'is_active', True)
+    
+    # For now, just return success
+    return jsonify({'success': True, 'is_active': getattr(target_user, 'is_active', True)})
+
+# Mentorship Management
+@admin_bp.route('/mentorships')
+@admin_required
+def mentorships():
+    user = get_current_user()
+    requests = MentorshipRequest.query.order_by(MentorshipRequest.request_date.desc()).all()
+    return render_template('admin/mentorships.html', user=user, requests=requests)
+
+@admin_bp.route('/mentorships/<int:request_id>/approve', methods=['POST'])
+@admin_required
+def approve_mentorship(request_id):
+    req = MentorshipRequest.query.get_or_404(request_id)
+    req.status = 'accepted'
+    db.session.commit()
+    return jsonify({'success': True})
+
+@admin_bp.route('/mentorships/<int:request_id>/delete', methods=['POST'])
+@admin_required
+def delete_mentorship(request_id):
+    req = MentorshipRequest.query.get_or_404(request_id)
+    db.session.delete(req)
+    db.session.commit()
+    return jsonify({'success': True})
+
+# Event Management
+@admin_bp.route('/events')
+@admin_required
+def events():
+    user = get_current_user()
+    events = Event.query.order_by(Event.created_at.desc()).all()
+    now = datetime.utcnow()
+    return render_template('admin/events.html', user=user, events=events, now=now)
+
+@admin_bp.route('/events/<int:event_id>/approve', methods=['POST'])
+@admin_required
+def approve_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    event.is_published = True
+    db.session.commit()
+    return jsonify({'success': True})
+
+@admin_bp.route('/events/<int:event_id>/delete', methods=['POST'])
+@admin_required
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    db.session.delete(event)
+    db.session.commit()
+    return jsonify({'success': True})
+
+# Post Moderation
+@admin_bp.route('/posts')
+@admin_required
+def posts():
+    user = get_current_user()
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return render_template('admin/posts.html', user=user, posts=posts)
+
+@admin_bp.route('/posts/<int:post_id>/delete', methods=['POST'])
+@admin_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({'success': True})
+
+# Reports
+@admin_bp.route('/reports')
+@admin_required
+def reports():
+    user = get_current_user()
+    reports = Report.query.order_by(Report.created_at.desc()).all()
+    pending_count = Report.query.filter_by(status='pending').count()
+    resolved_this_month = Report.query.filter(
+        Report.status == 'resolved',
+        Report.resolved_at >= datetime.utcnow().replace(day=1)
+    ).count()
+    
+    return render_template('admin/reports.html', 
+                         user=user, 
+                         reports=reports,
+                         pending_count=pending_count,
+                         resolved_this_month=resolved_this_month,
+                         avg_response_time=24)
+
+@admin_bp.route('/reports/<int:report_id>/resolve', methods=['POST'])
+@admin_required
+def resolve_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    report.status = 'resolved'
+    report.resolved_at = datetime.utcnow()
+    report.resolved_by = session['user_id']
+    db.session.commit()
+    return jsonify({'success': True})
+
+@admin_bp.route('/reports/<int:report_id>/dismiss', methods=['POST'])
+@admin_required
+def dismiss_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    report.status = 'dismissed'
+    db.session.commit()
+    return jsonify({'success': True})
+
+@admin_bp.route('/reports/<int:report_id>/delete', methods=['POST'])
+@admin_required
+def delete_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    return jsonify({'success': True})
+
+# Settings
+@admin_bp.route('/settings', methods=['GET', 'POST'])
+@admin_required
+def settings():
+    user = get_current_user()
+    
+    if request.method == 'POST':
+        # Simple settings update
+        settings = {
+            'mentorship_price_monthly': request.form.get('mentorship_price_monthly', '250'),
+            'mentorship_price_semester': request.form.get('mentorship_price_semester', '1250'),
+            'student_subscription_price': request.form.get('student_subscription_price', '5000'),
+            'default_event_capacity': request.form.get('default_event_capacity', '100'),
+            'site_name': request.form.get('site_name', 'Alumni Portal')
+        }
+        
+        # Save to system_settings table
+        try:
+            from ..models.user import SystemSetting
+            for key, value in settings.items():
+                setting = SystemSetting.query.filter_by(key=key).first()
+                if setting:
+                    setting.value = value
+                else:
+                    setting = SystemSetting(key=key, value=value)
+                    db.session.add(setting)
+            db.session.commit()
+            flash('Settings saved successfully!', 'success')
+        except Exception as e:
+            flash(f'Error saving settings: {str(e)}', 'error')
+        
+        return redirect(url_for('admin.settings'))
+    
+    # Load existing settings
+    settings = {}
+    try:
+        from ..models.user import SystemSetting
+        db_settings = SystemSetting.query.all()
+        for s in db_settings:
+            settings[s.key] = s.value
+    except:
+        pass
+    
+    
+    return render_template('admin/settings.html', user=user, settings=settings)
+
+@admin_bp.route('/transactions')
+@admin_required
+def transactions():
+    user = get_current_user()
+    from ..models.user import MentorshipRequest, EventRegistration
+    
+    # Get all transactions
+    mentorship_payments = MentorshipRequest.query.filter_by(payment_status='paid').all()
+    event_payments = EventRegistration.query.filter_by(payment_status='paid').all()
+    
+    transactions = []
+    for m in mentorship_payments:
+        transactions.append({
+            'id': m.id,
+            'type': 'mentorship',
+            'user': User.query.get(m.student_id),
+            'amount': m.payment_amount,
+            'date': m.payment_date,
+            'status': 'paid'
+        })
+    
+    for e in event_payments:
+        transactions.append({
+            'id': e.id,
+            'type': 'event',
+            'user': User.query.get(e.user_id),
+            'amount': e.payment_amount,
+            'date': e.payment_date,
+            'status': 'paid'
+        })
+    
+    # Sort by date
+    transactions.sort(key=lambda x: x['date'] if x['date'] else datetime.min, reverse=True)
+    
+    return render_template('admin/transactions.html', user=user, transactions=transactions)

@@ -18,12 +18,11 @@ def send_connection_request(receiver_id):
     if not current_user:
         return jsonify({'error': 'Not logged in'}), 401
     
-    # Check if receiver exists
+
     receiver = User.query.get(receiver_id)
     if not receiver:
         return jsonify({'error': 'User not found'}), 404
-    
-    # Check if already connected or request exists
+ 
     existing = ConnectionRequest.query.filter(
         ((ConnectionRequest.sender_id == current_user.id) & (ConnectionRequest.receiver_id == receiver_id)) |
         ((ConnectionRequest.sender_id == receiver_id) & (ConnectionRequest.receiver_id == current_user.id))
@@ -35,7 +34,7 @@ def send_connection_request(receiver_id):
         elif existing.status == 'pending':
             return jsonify({'error': 'Connection request already pending'}), 400
     
-    # Create connection request
+
     data = request.get_json() or {}
     message = data.get('message', '')
     
@@ -48,7 +47,7 @@ def send_connection_request(receiver_id):
     db.session.add(conn_request)
     db.session.commit()
     
-    # Send notification to receiver
+   
     NotificationService.create_notification(
         user_id=receiver_id,
         sender_id=current_user.id,
@@ -83,12 +82,12 @@ def respond_to_request(request_id):
     if action not in ['accept', 'reject']:
         return jsonify({'error': 'Invalid action'}), 400
     
-    # ONLY update connection status - NO mentorship request created here
+
     conn_request.status = 'accepted' if action == 'accept' else 'rejected'
     conn_request.responded_at = datetime.utcnow()
     db.session.commit()
     
-    # Send notification to sender (student)
+  
     status_text = 'accepted' if action == 'accept' else 'declined'
     NotificationService.create_notification(
         user_id=conn_request.sender_id,
@@ -105,10 +104,7 @@ def respond_to_request(request_id):
         'message': f'Connection request {status_text}'
     })
     
-    return jsonify({
-        'success': True,
-        'message': f'Connection request {status_text}'
-    })
+ 
 
 @connection_bp.route('/pending', methods=['GET'])
 def get_pending_requests():
@@ -143,13 +139,13 @@ def get_my_connections():
     if not current_user:
         return jsonify({'error': 'Not logged in'}), 401
     
-    # Connections where user is sender and accepted
+   
     sent = ConnectionRequest.query.filter_by(
         sender_id=current_user.id,
         status='accepted'
     ).all()
     
-    # Connections where user is receiver and accepted
+   
     received = ConnectionRequest.query.filter_by(
         receiver_id=current_user.id,
         status='accepted'
@@ -160,7 +156,7 @@ def get_my_connections():
     for conn in sent:
         user = User.query.get(conn.receiver_id)
         if user:
-            # Check if mentorship can be requested (alumni and available)
+            
             can_request_mentorship = False
             if user.role == 'alumni':
                 profile = AlumniProfile.query.filter_by(user_id=user.id).first()
@@ -177,7 +173,7 @@ def get_my_connections():
     for conn in received:
         user = User.query.get(conn.sender_id)
         if user:
-            # Check if mentorship can be requested (alumni and available)
+            
             can_request_mentorship = False
             if user.role == 'alumni':
                 profile = AlumniProfile.query.filter_by(user_id=user.id).first()
@@ -204,7 +200,7 @@ def check_connection_status(user_id):
     if current_user.id == user_id:
         return jsonify({'status': 'self'})
     
-    # Check for existing connection
+   
     connection = ConnectionRequest.query.filter(
         ((ConnectionRequest.sender_id == current_user.id) & (ConnectionRequest.receiver_id == user_id)) |
         ((ConnectionRequest.sender_id == user_id) & (ConnectionRequest.receiver_id == current_user.id))

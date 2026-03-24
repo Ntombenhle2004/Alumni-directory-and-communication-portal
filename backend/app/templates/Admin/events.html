@@ -1,0 +1,146 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Event Management{% endblock %}
+
+{% block page_title %}Event Management{% endblock %}
+
+{% block content %}
+<div class="admin-table">
+    <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <h3>All Events</h3>
+        <div>
+            <select id="filterStatus" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-right: 0.5rem;">
+                <option value="all">All Events</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="past">Past</option>
+                <option value="published">Published</option>
+                <option value="draft">Drafts</option>
+            </select>
+            <input type="text" id="searchEvents" placeholder="Search events..." style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; width: 200px;">
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Organizer</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Mode</th>
+                <th>Price</th>
+                <th>Registered</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr data-status="{% if event.start_date > now %}upcoming{% else %}past{% endif %}" data-published="{{ event.is_published }}">
+                <td>{{ event.id }}</td>
+                <td>
+                    <strong>{{ event.title }}</strong><br>
+                    <small style="color: #666;">{{ event.description[:50] }}{% if event.description|length > 50 %}...{% endif %}</small>
+                </td>
+                <td>{{ event.organizer.full_name if event.organizer else 'Unknown' }}</td>
+                <td>
+                    {{ event.start_date.strftime('%b %d, %Y') }}<br>
+                    <small>{{ event.start_date.strftime('%I:%M %p') }}</small>
+                </td>
+                <td><span class="status-badge status-active">{{ event.event_type|title }}</span></td>
+                <td>
+                    {% if event.event_mode == 'online' %}
+                        <span class="status-badge status-active">🌐 Online</span>
+                    {% elif event.event_mode == 'in-person' %}
+                        <span class="status-badge">🏢 In-Person</span>
+                    {% else %}
+                        <span class="status-badge status-pending">🔄 Hybrid</span>
+                    {% endif %}
+                </td>
+                <td>{% if event.price == 0 %}Free{% else %}R{{ "%.2f"|format(event.price) }}{% endif %}</td>
+                <td>{{ event.registered_count }}/{% if event.capacity %}{{ event.capacity }}{% else %}∞{% endif %}</td>
+                <td>
+                    {% if event.is_published %}
+                        <span class="status-badge status-active">Published</span>
+                    {% else %}
+                        <span class="status-badge status-pending">Draft</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if not event.is_published %}
+                        <button class="btn-sm btn-success" onclick="publishEvent({{ event.id }})">Publish</button>
+                        {% endif %}
+                        <a href="{{ url_for('events.view_event', event_id=event.id) }}" class="btn-sm btn-primary" target="_blank">View</a>
+                        <button class="btn-sm btn-danger" onclick="deleteEvent({{ event.id }})">Delete</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function publishEvent(eventId) {
+        if (!confirm('Publish this event? It will be visible to all users.')) return;
+        
+        fetch(`/admin/events/${eventId}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    function deleteEvent(eventId) {
+        if (!confirm('Delete this event? This action cannot be undone.')) return;
+        
+        fetch(`/admin/events/${eventId}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    // Filter functionality
+    document.getElementById('filterStatus').addEventListener('change', filterEvents);
+    document.getElementById('searchEvents').addEventListener('input', filterEvents);
+    
+    function filterEvents() {
+        const status = document.getElementById('filterStatus').value;
+        const search = document.getElementById('searchEvents').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            let show = true;
+            
+            // Status filter
+            if (status !== 'all') {
+                if (status === 'upcoming' && row.dataset.status !== 'upcoming') show = false;
+                if (status === 'past' && row.dataset.status !== 'past') show = false;
+                if (status === 'published' && row.dataset.published !== 'True') show = false;
+                if (status === 'draft' && row.dataset.published !== 'False') show = false;
+            }
+            
+            // Search filter
+            if (show && search) {
+                const title = row.cells[1].textContent.toLowerCase();
+                const organizer = row.cells[2].textContent.toLowerCase();
+                if (!title.includes(search) && !organizer.includes(search)) show = false;
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

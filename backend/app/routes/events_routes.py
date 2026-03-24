@@ -5,7 +5,6 @@ from datetime import datetime
 
 events_bp = Blueprint("events", __name__, url_prefix="/events")
 
-#  current user
 def get_current_user():
     if 'user_id' in session:
         return User.query.get(session['user_id'])
@@ -42,21 +41,20 @@ def create_event():
     
     if request.method == 'POST':
         try:
-            # Basic event info
+          
             title = request.form.get('title')
             description = request.form.get('description')
             event_type = request.form.get('event_type')
             event_mode = request.form.get('event_mode')
             
-            # Parse dates
+           
             start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%dT%H:%M')
             end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%dT%H:%M')
             
-            # Common fields
+            
             capacity = request.form.get('capacity')
             price = request.form.get('price', 0)
             
-            # Create event object
             new_event = Event(
                 title=title,
                 description=description,
@@ -283,44 +281,44 @@ def edit_event(event_id):
     
     event = Event.query.get_or_404(event_id)
     
-    # Check if user is the organizer
+    
     if event.organizer_id != user.id and user.role != 'admin':
         flash('You do not have permission to edit this event.', 'error')
         return redirect(url_for('events.alumni_events'))
     
-    print(f"Method: {request.method}")  # Debug print
+
     
     if request.method == 'POST':
-        print("POST request received")  # Debug print
+        print("POST request received")  
         try:
-            # Print all form data for debugging
+           
             print(f"Form data: {request.form}")
             
-            # Basic event info
+            
             event.title = request.form.get('title')
             event.description = request.form.get('description')
             event.event_type = request.form.get('event_type')
             event.event_mode = request.form.get('event_mode')
             
-            # Parse dates
+          
             start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%dT%H:%M')
             end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%dT%H:%M')
             event.start_date = start_date
             event.end_date = end_date
             
-            # Registration deadline
+           
             deadline = request.form.get('registration_deadline')
             if deadline:
                 event.registration_deadline = datetime.strptime(deadline, '%Y-%m-%dT%H:%M')
             else:
                 event.registration_deadline = None
             
-            # Common fields
+            
             event.capacity = request.form.get('capacity') if request.form.get('capacity') else None
             event.price = float(request.form.get('price', 0))
             event.image_url = request.form.get('image_url')
             
-            # Handle venue fields (for in-person or hybrid)
+          
             if event.event_mode in ['in-person', 'hybrid']:
                 event.venue_name = request.form.get('venue_name')
                 event.venue_address = request.form.get('venue_address')
@@ -330,7 +328,6 @@ def edit_event(event_id):
                 event.venue_address = None
                 event.venue_capacity = None
             
-            # Handle online fields (for online or hybrid)
             if event.event_mode in ['online', 'hybrid']:
                 event.online_platform = request.form.get('online_platform')
                 event.online_link = request.form.get('online_link')
@@ -344,7 +341,7 @@ def edit_event(event_id):
                 event.meeting_password = None
                 event.dial_in_numbers = None
             
-            # Additional settings
+         
             event.is_published = request.form.get('is_published') == 'true'
             event.is_featured = request.form.get('is_featured') == 'true'
             
@@ -355,7 +352,7 @@ def edit_event(event_id):
             
         except Exception as e:
             db.session.rollback()
-            print(f"Error: {str(e)}")  # Debug print
+            print(f"Error: {str(e)}")
             flash(f'Error updating event: {str(e)}', 'error')
             return render_template("events/edit_event.html", user=user, event=event)
     

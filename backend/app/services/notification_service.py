@@ -12,7 +12,7 @@ class NotificationService:
     def create_notification(user_id, title, message, notification_type, sender_id=None, reference_id=None, reference_type=None):
         """Create an in-app notification"""
         try:
-            # Check if user has preferences and wants this type of notification
+       
             prefs = NotificationPreference.query.filter_by(user_id=user_id).first()
             if prefs:
                 pref_map = {
@@ -45,7 +45,7 @@ class NotificationService:
     def send_email(to_email, subject, html_content, text_content=None):
         """Send an email notification"""
         try:
-            # Get email settings from environment variables
+            
             smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
             smtp_port = int(os.getenv('SMTP_PORT', 587))
             smtp_username = os.getenv('SMTP_USERNAME')
@@ -61,7 +61,7 @@ class NotificationService:
             msg['From'] = from_email
             msg['To'] = to_email
             
-            # Add plain text version
+            
             if text_content:
                 msg.attach(MIMEText(text_content, 'plain'))
             
@@ -93,7 +93,7 @@ class NotificationService:
 
             print(f"Creating notification for alumni {alumni.id} about request from {student.full_name}")
             
-            # Create in-app notification
+         
             NotificationService.create_notification(
                 user_id=alumni.id,
                 sender_id=student.id,
@@ -104,7 +104,7 @@ class NotificationService:
                 reference_type='mentorship_request'
             )
             
-            # Check email preferences
+            
             prefs = NotificationPreference.query.filter_by(user_id=alumni.id).first()
             if prefs and prefs.email_mentorship_requests:
                 # Send email
@@ -140,7 +140,7 @@ class NotificationService:
             status_text = "accepted" if status == 'accepted' else "declined"
             color = "#27ae60" if status == 'accepted' else "#e74c3c"
             
-            # Create in-app notification
+          
             NotificationService.create_notification(
                 user_id=student.id,
                 sender_id=alumni.id,
@@ -154,7 +154,7 @@ class NotificationService:
             # Check email preferences
             prefs = NotificationPreference.query.filter_by(user_id=student.id).first()
             if prefs and prefs.email_mentorship_responses:
-                # Send email
+              
                 subject = f"Mentorship Request {status_text.title()}"
                 html_content = f"""
                 <h2>Mentorship Request Update</h2>
@@ -181,18 +181,18 @@ class NotificationService:
             if not message:
                 return False
             
-            # Get conversation to find recipient
+         
             from ..models.user import Conversation
             conversation = Conversation.query.get(message.conversation_id)
             if not conversation:
                 return False
             
-            # Determine recipient
+            
             recipient_id = conversation.alumni_id if message.sender_id == conversation.student_id else conversation.student_id
             sender = User.query.get(message.sender_id)
             recipient = User.query.get(recipient_id)
             
-            # Create in-app notification
+            
             NotificationService.create_notification(
                 user_id=recipient.id,
                 sender_id=sender.id,
@@ -203,12 +203,12 @@ class NotificationService:
                 reference_type='message'
             )
             
-            # Check email preferences
+            
             prefs = NotificationPreference.query.filter_by(user_id=recipient.id).first()
             if prefs and prefs.email_messages:
-                # Send email (with quiet hours check)
+               
                 if NotificationService._is_within_quiet_hours(recipient.id):
-                    return True  # Skip email during quiet hours
+                    return True  
                 
                 subject = f"New Message from {sender.full_name}"
                 html_content = f"""
@@ -240,13 +240,13 @@ class NotificationService:
             if not event:
                 return False
             
-            # Get all registered users
+         
             registrations = EventRegistration.query.filter_by(event_id=event_id, status='registered').all()
             
             for reg in registrations:
                 user = User.query.get(reg.user_id)
                 
-                # Check preferences
+                
                 prefs = NotificationPreference.query.filter_by(user_id=user.id).first()
                 if prefs and not prefs.email_event_reminders:
                     continue
@@ -333,7 +333,7 @@ def update_request_status(request_id, status):
         if not req:
             return None, "Request not found."
 
-        if status not in ['accepted', 'rejected']:  # Changed to lowercase
+        if status not in ['accepted', 'rejected']: 
             return None, "Invalid status. Use 'accepted' or 'rejected'."
 
         req.status = status

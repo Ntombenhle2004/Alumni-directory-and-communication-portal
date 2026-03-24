@@ -23,7 +23,7 @@ def register_blueprints():
     app.register_blueprint(profile_bp)
     app.register_blueprint(mentorship_bp, url_prefix="/api")
     app.register_blueprint(chat_bp, url_prefix="/api")
-    app.register_blueprint(admin_bp, url_prefix="/api")
+    app.register_blueprint(admin_bp)
     app.register_blueprint(payment_bp, url_prefix="/api")
     app.register_blueprint(events_bp)
     app.register_blueprint(notification_bp)

@@ -1,0 +1,60 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="admin-table" style="padding: 1.5rem;">
+    <form method="POST">
+        <div style="display: grid; gap: 1.5rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mentorship Price (Monthly)</label>
+                <input type="number" name="mentorship_price_monthly" class="form-control" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;" value="250">
+                <small>Price in ZAR for monthly mentorship subscription</small>
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mentorship Price (Semester)</label>
+                <input type="number" name="mentorship_price_semester" class="form-control" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;" value="1250">
+                <small>Price in ZAR for 5-month semester</small>
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Student Subscription Price</label>
+                <input type="number" name="student_subscription_price" class="form-control" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;" value="5000">
+                <small>Price in cents (5000 = R50.00)</small>
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Max Event Capacity (Default)</label>
+                <input type="number" name="default_event_capacity" class="form-control" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;" value="100">
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Site Name</label>
+                <input type="text" name="site_name" class="form-control" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;" value="Alumni Portal">
+            </div>
+            
+            <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="maintenance_mode" value="true">
+                    <span>Enable Maintenance Mode</span>
+                </label>
+                <small>When enabled, only admins can access the site</small>
+            </div>
+            
+            <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="email_notifications" value="true" checked>
+                    <span>Enable Email Notifications</span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="padding: 0.75rem; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer;">
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

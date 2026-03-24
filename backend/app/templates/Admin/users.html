@@ -1,0 +1,104 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="admin-table">
+    <div style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <h3>All Users</h3>
+        <div>
+            <input type="text" id="searchUsers" placeholder="Search users..." style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; width: 250px;">
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    <select class="role-select" data-user-id="{{ user.id }}" style="padding: 0.25rem 0.5rem; border-radius: 4px;">
+                        <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+                        <option value="alumni" {% if user.role == 'alumni' %}selected{% endif %}>Alumni</option>
+                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </td>
+                <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+                <td>
+                    <span class="status-badge status-active">Active</span>
+                </td>
+                <td>
+                    <button class="btn-sm btn-danger" onclick="toggleUserStatus({{ user.id }})">Deactivate</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Role change
+    document.querySelectorAll('.role-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const userId = this.dataset.userId;
+            const newRole = this.value;
+            
+            fetch(`/admin/users/${userId}/role`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: newRole })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('User role updated successfully');
+                }
+            });
+        });
+    });
+    
+    function toggleUserStatus(userId) {
+        fetch(`/admin/users/${userId}/toggle-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+    
+    // Search functionality
+    document.getElementById('searchUsers').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const name = row.cells[1].textContent.toLowerCase();
+            const email = row.cells[2].textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

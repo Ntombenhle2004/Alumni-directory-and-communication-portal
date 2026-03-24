@@ -17,7 +17,6 @@ except ImportError as e:
         def __init__(self, **kwargs):
             pass
 
-# Initialize Mail
 mail = Mail()
 
 def send_email(to_email, subject, template, **kwargs):
@@ -31,7 +30,7 @@ def send_email(to_email, subject, template, **kwargs):
     
     try:
         with current_app.app_context():
-            # Render HTML content
+           
             
             print(f"📧 [EMAIL DEBUG] Rendering template: emails/{template}.html")
             html_content = render_template(f'emails/{template}.html', **kwargs)
@@ -97,7 +96,7 @@ def send_payment_initiated_email(student, alumni, request):
 
 def send_payment_success_email(student, alumni, request):
     """Send email to both student and alumni when payment is successful"""
-    # Send to student
+    
     send_email(
         to_email=student.email,
         subject="Payment Successful - Mentorship Activated!",
@@ -108,13 +107,4 @@ def send_payment_success_email(student, alumni, request):
         app_url=os.getenv('APP_URL', 'http://localhost:5000')
     )
     
-    # Send to alumni
-    send_email(
-        to_email=alumni.email,
-        subject="Payment Received - Mentorship Activated!",
-        template='payment_success_alumni',
-        student=student,
-        alumni=alumni,
-        request=request,
-        app_url=os.getenv('APP_URL', 'http://localhost:5000')
-    )
+    

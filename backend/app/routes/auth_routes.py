@@ -136,15 +136,19 @@ def login():
     flash(f"Welcome back, {user.full_name}!", "success")
     
     
-    if user.role == 'admin':
-        print("Redirecting to admin dashboard")
-        return redirect(url_for('views.admin_dashboard'))
-    elif user.role == 'alumni':
-        print("Redirecting to alumni dashboard")
-        return redirect(url_for('views.alumni_dashboard'))
-    else:  
-        print("Redirecting to student dashboard")
-        return redirect(url_for('student.dashboard'))
+    if user and auth_service.verify_password(password, user.password_hash):
+        session['user_id'] = user.id
+        session['user_name'] = user.full_name
+        session['user_role'] = user.role
+        
+        if user.role == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        elif user.role == 'alumni':
+            return redirect(url_for('views.alumni_dashboard'))
+        else:
+            return redirect(url_for('student.dashboard'))
+    
+    
 
 
 @auth.route('/logout')
